@@ -402,17 +402,15 @@
         </div>
     </div>
     
-    <script>
+<script>
         // Configuración
         const DEFAULT_CONFIG = {
             owner: 'Jeffusilero',
             repo: 'Pizarra_digital',
             branch: 'main',
-            dataFile: 'data.json',
-            manifestFile: 'manifest.json',
             dataUrl: 'https://jeffusilero.github.io/Pizarra_digital/data.json',
             manifestUrl: 'https://jeffusilero.github.io/Pizarra_digital/manifest.json',
-            discussionsApi: 'https://api.github.com/repos/Jeffusilero/Pizarra_digital/discussions'
+            rawDataUrl: 'https://raw.githubusercontent.com/Jeffusilero/Pizarra_digital/main/data.json'
         };
 
         let githubConfig = {...DEFAULT_CONFIG};
@@ -434,24 +432,11 @@
         document.addEventListener('DOMContentLoaded', async function() {
             showLoading();
             try {
-                // Cargar configuración guardada o usar la predeterminada
-                const savedConfig = localStorage.getItem('githubConfig');
-                if (savedConfig) {
-                    githubConfig = JSON.parse(savedConfig);
-                } else {
-                    localStorage.setItem('githubConfig', JSON.stringify(DEFAULT_CONFIG));
-                }
-                
-                // Carga primero de localStorage para mostrar algo rápido
-                loadFromLocal();
-                loadData();
-                
-                // Luego intenta sincronizar con GitHub
                 await loadFromGitHub();
                 loadData();
             } catch (error) {
                 console.error('Error al cargar datos:', error);
-                alert('Datos cargados localmente. Los cambios se sincronizarán cuando haya conexión.');
+                alert('Error al cargar datos. Por favor recarga la página.');
             } finally {
                 hideLoading();
             }
@@ -460,72 +445,51 @@
         // Función para cargar datos desde GitHub
         async function loadFromGitHub() {
             try {
-                // Cargar datos principales
-                const dataResponse = await fetch(githubConfig.dataUrl);
-                const manifestResponse = await fetch(githubConfig.manifestUrl);
+                // Usamos raw.githubusercontent.com para evitar problemas de caché
+                const dataResponse = await fetch(`${githubConfig.rawDataUrl}?t=${Date.now()}`);
+                if (!dataResponse.ok) throw new Error('Error al cargar datos');
+                database = await dataResponse.json();
                 
-                if (dataResponse.ok) {
-                    database = await dataResponse.json();
-                } else {
-                    // Si falla, carga desde localStorage
-                    loadFromLocal();
-                }
-
+                const manifestResponse = await fetch(`${githubConfig.manifestUrl}?t=${Date.now()}`);
                 if (manifestResponse.ok) {
                     manifestAssignments = await manifestResponse.json();
-                } else {
-                    // Si falla, carga desde localStorage
-                    loadFromLocal();
                 }
             } catch (error) {
                 console.error('Error al cargar datos:', error);
-                // Si hay error, carga desde localStorage
-                loadFromLocal();
                 throw error;
             }
         }
 
-        // Función para guardar localmente
-        function saveToLocal() {
-            localStorage.setItem('pizarra_database', JSON.stringify(database));
-            localStorage.setItem('pizarra_manifests', JSON.stringify(manifestAssignments));
-        }
-
-        // Función para cargar desde local
-        function loadFromLocal() {
-            const localData = localStorage.getItem('pizarra_database');
-            const localManifests = localStorage.getItem('pizarra_manifests');
-            
-            if (localData) database = JSON.parse(localData);
-            if (localManifests) manifestAssignments = JSON.parse(localManifests);
-        }
-
-        // Función para guardar datos usando GitHub Discussions
-        async function saveToGitHub() {
+        // Función para guardar datos (simulada)
+            async function saveToGitHub() {
             showLoading();
             try {
-                // Primero guarda localmente
-                saveToLocal();
+                // URL de tu servidor Node.js desplegado
+                const serverUrl = 'https://tu-servidor-node.herokuapp.com/update-data';
                 
-                // Crear un nuevo "discussion" con los datos
-                const response = await fetch(githubConfig.discussionsApi, {
+                const response = await fetch(serverUrl, {
                     method: 'POST',
                     headers: {
-                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        title: `Actualización de datos ${new Date().toLocaleString()}`,
-                        body: `||DATA||${JSON.stringify(database)}||MANIFEST||${JSON.stringify(manifestAssignments)}`,
-                        category: 'General'
+                        database: database,
+                        manifest: manifestAssignments
                     })
                 });
 
-                if (!response.ok) throw new Error('Error al enviar datos');
+                const result = await response.json();
                 
-                alert('Datos enviados para actualización. Se procesarán pronto.');
+                if (!result.success) throw new Error(result.message);
+                
+                // Esperar 3 segundos para que GitHub procese los cambios
+                setTimeout(() => {
+                    alert('Datos guardados correctamente en GitHub. La página se recargará.');
+                    window.location.reload();
+                }, 3000);
             } catch (error) {
                 console.error('Error al guardar:', error);
-                alert('Error al guardar. Los cambios se han guardado localmente y se sincronizarán más tarde.');
+                alert('Error al guardar los cambios: ' + error.message);
             } finally {
                 hideLoading();
             }
