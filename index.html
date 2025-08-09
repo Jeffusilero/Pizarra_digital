@@ -20,7 +20,7 @@
             width: 70%;
             max-width: 1200px;
         }
-        
+
         
         h2 {
             color: #333;
@@ -450,26 +450,47 @@
 
     // Función para cargar datos desde GitHub Pages (sin API)
     async function loadFromGitHubPages() {
-        try {
-            const [dataResponse, manifestResponse] = await Promise.all([
-                fetch(`https://${githubConfig.owner}.github.io/${githubConfig.repo}/${githubConfig.dataFile}?t=${Date.now()}`),
-                fetch(`https://${githubConfig.owner}.github.io/${githubConfig.repo}/${githubConfig.manifestFile}?t=${Date.now()}`)
-            ]);
-            
-            if (dataResponse.ok) {
-                database = await dataResponse.json();
-                localStorage.setItem('pizarraData', JSON.stringify(database));
+    try {
+        // Intenta cargar desde diferentes ubicaciones posibles
+        const baseUrls = [
+            `https://${githubConfig.owner}.github.io/${githubConfig.repo}/`,
+            `https://raw.githubusercontent.com/${githubConfig.owner}/${githubConfig.repo}/${githubConfig.branch}/`
+        ];
+
+        let dataLoaded = false;
+        
+        for (const baseUrl of baseUrls) {
+            try {
+                const [dataResponse, manifestResponse] = await Promise.all([
+                    fetch(`${baseUrl}${githubConfig.dataFile}?t=${Date.now()}`),
+                    fetch(`${baseUrl}${githubConfig.manifestFile}?t=${Date.now()}`)
+                ]);
+                
+                if (dataResponse.ok) {
+                    database = await dataResponse.json();
+                    localStorage.setItem('pizarraData', JSON.stringify(database));
+                    dataLoaded = true;
+                }
+                
+                if (manifestResponse.ok) {
+                    manifestAssignments = await manifestResponse.json();
+                    localStorage.setItem('pizarraManifests', JSON.stringify(manifestAssignments));
+                }
+                
+                if (dataLoaded) break;
+            } catch (e) {
+                console.warn(`Error con ${baseUrl}:`, e);
             }
-            
-            if (manifestResponse.ok) {
-                manifestAssignments = await manifestResponse.json();
-                localStorage.setItem('pizarraManifests', JSON.stringify(manifestAssignments));
-            }
-        } catch (error) {
-            console.warn('Error al cargar desde GitHub Pages:', error);
-            throw error;
         }
+
+        if (!dataLoaded) {
+            throw new Error('No se pudo cargar desde ninguna ubicación');
+        }
+    } catch (error) {
+        console.error('Error al cargar desde GitHub Pages:', error);
+        throw error;
     }
+}
 
     // Función para cargar desde localStorage
     function loadFromLocalStorage() {
