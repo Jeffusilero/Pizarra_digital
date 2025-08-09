@@ -20,7 +20,6 @@
             width: 70%;
             max-width: 1200px;
         }
-
         
         h2 {
             color: #333;
@@ -402,191 +401,571 @@
         </div>
     </div>
     
-<script>
-    // Configuración de GitHub (sin token en el frontend)
-    const DEFAULT_CONFIG = {
-        owner: 'Jeffusilero',
-        repo: 'Pizarra_digital',
-        branch: 'main',
-        dataFile: 'data.json',
-        manifestFile: 'manifests.json'
-    };
+    <script>
+        // Configuración de GitHub
+        const DEFAULT_CONFIG = {
+            owner: 'Jeffusilero',
+            repo: 'Pizarra_digital',
+            branch: 'main',
+            dataFile: 'data.json',
+        };
 
-    let githubConfig = {...DEFAULT_CONFIG};
-    let database = [];
-    let manifestAssignments = {};
-    let currentEditingRow = null;
-    
-    // Mostrar estado de carga
-    function showLoading() {
-        document.getElementById('loading').style.display = 'flex';
-    }
-    
-    // Ocultar estado de carga
-    function hideLoading() {
-        document.getElementById('loading').style.display = 'none';
-    }
-
-    // Al cargar la página
-    document.addEventListener('DOMContentLoaded', async function() {
-        showLoading();
-        try {
-            // 1. Intenta cargar desde GitHub Pages (método público)
-            await loadFromGitHubPages();
-            
-            // 2. Si falla, carga desde localStorage como respaldo
-            if (database.length === 0) {
-                loadFromLocalStorage();
-            }
-            
-            loadData();
-        } catch (error) {
-            console.error('Error al cargar datos:', error);
-            alert('Error al cargar datos. Verifica la conexión.');
-        } finally {
-            hideLoading();
-        }
-    });
-
-    // Función para cargar datos desde GitHub Pages (sin API)
-    async function loadFromGitHubPages() {
-    try {
-        // Intenta cargar desde diferentes ubicaciones posibles
-        const baseUrls = [
-            `https://${githubConfig.owner}.github.io/${githubConfig.repo}/`,
-            `https://raw.githubusercontent.com/${githubConfig.owner}/${githubConfig.repo}/${githubConfig.branch}/`
-        ];
-
-        let dataLoaded = false;
+        let githubConfig = {...DEFAULT_CONFIG};
+        let database = [];
+        let manifestAssignments = {};
+        let currentEditingRow = null;
         
-        for (const baseUrl of baseUrls) {
+        // Mostrar estado de carga
+        function showLoading() {
+            document.getElementById('loading').style.display = 'flex';
+        }
+        
+        // Ocultar estado de carga
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        // Al cargar la página
+        document.addEventListener('DOMContentLoaded', async function() {
+            showLoading();
             try {
-                const [dataResponse, manifestResponse] = await Promise.all([
-                    fetch(`${baseUrl}${githubConfig.dataFile}?t=${Date.now()}`),
-                    fetch(`${baseUrl}${githubConfig.manifestFile}?t=${Date.now()}`)
-                ]);
-                
-                if (dataResponse.ok) {
-                    database = await dataResponse.json();
-                    localStorage.setItem('pizarraData', JSON.stringify(database));
-                    dataLoaded = true;
+                // Cargar configuración guardada o usar la predeterminada
+                const savedConfig = localStorage.getItem('githubConfig');
+                if (savedConfig) {
+                    githubConfig = JSON.parse(savedConfig);
+                } else {
+                    localStorage.setItem('githubConfig', JSON.stringify(DEFAULT_CONFIG));
                 }
                 
-                if (manifestResponse.ok) {
-                    manifestAssignments = await manifestResponse.json();
-                    localStorage.setItem('pizarraManifests', JSON.stringify(manifestAssignments));
-                }
-                
-                if (dataLoaded) break;
-            } catch (e) {
-                console.warn(`Error con ${baseUrl}:`, e);
-            }
-        }
-
-        if (!dataLoaded) {
-            throw new Error('No se pudo cargar desde ninguna ubicación');
-        }
-    } catch (error) {
-        console.error('Error al cargar desde GitHub Pages:', error);
-        throw error;
-    }
-}
-
-    // Función para cargar desde localStorage
-    function loadFromLocalStorage() {
-        const savedData = localStorage.getItem('pizarraData');
-        const savedManifests = localStorage.getItem('pizarraManifests');
-        
-        if (savedData) {
-            database = JSON.parse(savedData);
-        }
-        
-        if (savedManifests) {
-            manifestAssignments = JSON.parse(savedManifests);
-        }
-    }
-
-    // Función para guardar datos (usando GitHub API a través de un proxy)
-    async function saveToGitHub() {
-        showLoading();
-        try {
-            // Guardar en localStorage primero
-            localStorage.setItem('pizarraData', JSON.stringify(database));
-            localStorage.setItem('pizarraManifests', JSON.stringify(manifestAssignments));
-            
-            // Enviar datos a un backend/proxy que maneje el token de GitHub
-            const response = await fetch('https://tu-backend-proxy.com/save-to-github', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    database: database,
-                    manifestAssignments: manifestAssignments,
-                    config: githubConfig
-                })
-            });
-            
-            if (!response.ok) {
-                throw new Error('Error al guardar en GitHub');
-            }
-            
-            console.log('Datos guardados exitosamente en GitHub');
-        } catch (error) {
-            console.error('Error al guardar:', error);
-            alert('Los datos se guardaron localmente pero no en GitHub. Error: ' + error.message);
-        } finally {
-            hideLoading();
-        }
-    }
-
-    // [Resto de tus funciones existentes: loadData, openAddModal, closeAddModal, etc...]
-    // Mantén todas tus funciones actuales como están, solo cambia las de carga/guardado
-
-    // Función para asignar manifiesto (actualizada)
-    async function assignManifest() {
-        const manifiesto = document.getElementById('assign-manifiesto').value;
-        const ciudad = document.getElementById('assign-ciudad').value;
-        
-        if (!manifiesto || !ciudad) {
-            alert('Por favor complete todos los campos');
-            return;
-        }
-        
-        manifestAssignments[manifiesto] = ciudad;
-        
-        database.forEach(item => {
-            if (item.manifiesto === manifiesto && item.descripcion === "RETENER") {
-                item.ciudad = ciudad;
+                await loadFromGitHub();
+                loadData();
+            } catch (error) {
+                console.error('Error al cargar datos:', error);
+                alert('Error al cargar datos. Verifica la conexión o configuración.');
+            } finally {
+                hideLoading();
             }
         });
-        
-        try {
-            await saveToGitHub();
-            loadData();
-            
-            document.getElementById('assign-manifiesto').value = '';
-            document.getElementById('assign-ciudad').value = '';
-            closeAssignModal();
-        } catch (error) {
-            alert('Error al guardar los cambios');
-            console.error(error);
+    // Ejemplo de código para manejar errores de carga
+    fetch('datos.json')
+      .then(response => {
+        if (!response.ok) throw new Error('Error en la red');
+        return response.json();
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        // Mostrar mensaje alternativo o reintentar
+      });
+        // Función para abrir modal de agregar
+        function openAddModal() {
+            document.getElementById('addModal').style.display = 'block';
         }
-    }
-
-    // Función para importar Excel (actualizada)
-    async function handleFileImport(fileInput) {
-        const file = fileInput.files[0];
-        if (!file) return;
         
-        const reader = new FileReader();
-        reader.onload = async function(e) {
+        // Función para cerrar modal de agregar
+        function closeAddModal() {
+            document.getElementById('addModal').style.display = 'none';
+        }
+        
+        // Función para abrir modal de asignación
+        function openAssignModal() {
+            document.getElementById('assignModal').style.display = 'block';
+        }
+        
+        // Función para cerrar modal de asignación
+        function closeAssignModal() {
+            document.getElementById('assignModal').style.display = 'none';
+        }
+        
+        // Función para cerrar modal de edición
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        // Función para cargar datos desde GitHub
+        async function loadFromGitHub() {
             try {
+                // Cargar datos principales (guías)
+                const dataResponse = await fetch(`https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.dataFile}`, {
+                    headers: {
+                        'Authorization': `token ${githubConfig.token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                
+                if (dataResponse.ok) {
+                    const dataContent = await dataResponse.json();
+                    const decodedData = atob(dataContent.content);
+                    database = JSON.parse(decodedData);
+                } else if (dataResponse.status === 404) {
+                    database = [];
+                } else {
+                    throw new Error('Error al cargar datos');
+                }
+
+                // Cargar asignaciones de manifiestos
+                const manifestResponse = await fetch(`https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.manifestFile}`, {
+                    headers: {
+                        'Authorization': `token ${githubConfig.token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+
+                if (manifestResponse.ok) {
+                    const manifestContent = await manifestResponse.json();
+                    const decodedManifests = atob(manifestContent.content);
+                    manifestAssignments = JSON.parse(decodedManifests);
+                } else if (manifestResponse.status === 404) {
+                    manifestAssignments = {};
+                } else {
+                    throw new Error('Error al cargar asignaciones de manifiestos');
+                }
+            } catch (error) {
+                console.error('Error al cargar desde GitHub:', error);
+                throw error;
+            }
+        }
+        
+        fetch('https://jeffusilero.github.io/data.json')
+  .then(response => console.log('Conexión exitosa:', response))
+  .catch(error => console.error('Error de conexión:', error));
+
+        // Función para guardar datos en GitHub
+        async function saveToGitHub() {
+            showLoading();
+            try {
+                // Obtener SHAs de los archivos existentes
+                let dataSha = '';
+                let manifestSha = '';
+                
+                const dataCheck = await fetch(`https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.dataFile}`, {
+                    headers: {
+                        'Authorization': `token ${githubConfig.token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                
+                if (dataCheck.ok) {
+                    const dataContent = await dataCheck.json();
+                    dataSha = dataContent.sha;
+                }
+                
+                const manifestCheck = await fetch(`https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.manifestFile}`, {
+                    headers: {
+                        'Authorization': `token ${githubConfig.token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                
+                if (manifestCheck.ok) {
+                    const manifestContent = await manifestCheck.json();
+                    manifestSha = manifestContent.sha;
+                }
+                
+                // Guardar datos principales (guías)
+                const dataContent = btoa(JSON.stringify(database, null, 2));
+                await fetch(`https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.dataFile}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${githubConfig.token}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: 'Actualización de datos de pizarra',
+                        content: dataContent,
+                        sha: dataSha || undefined,
+                        branch: githubConfig.branch
+                    })
+                });
+                
+                // Guardar asignaciones de manifiestos
+                const manifestContent = btoa(JSON.stringify(manifestAssignments, null, 2));
+                await fetch(`https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.manifestFile}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${githubConfig.token}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: 'Actualización de asignaciones de manifiestos',
+                        content: manifestContent,
+                        sha: manifestSha || undefined,
+                        branch: githubConfig.branch
+                    })
+                });
+            } catch (error) {
+                console.error('Error al guardar en GitHub:', error);
+                throw error;
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Función para cargar datos en la tabla
+        function loadData() {
+            const tableBody = document.getElementById('pizarra-table').getElementsByTagName('tbody')[0];
+            tableBody.innerHTML = '';
+            
+            database.forEach(item => {
+                const newRow = tableBody.insertRow();
+                let descClass = '';
+                
+                if(item.descripcion === "RETENER") {
+                    if(item.ciudad === "GYE") {
+                        descClass = 'retener-amarillo';
+                    } else if(item.ciudad === "QUT") {
+                        descClass = 'retener-naranja';
+                    } else {
+                        descClass = 'retener';
+                    }
+                } else if(item.descripcion === "LIBERAR") {
+                    descClass = 'liberar';
+                }
+                
+                // Contenedor de acciones
+                const actionContainer = document.createElement('td');
+                
+                if(item.descripcion === "RETENER") {
+                    actionContainer.innerHTML = `
+                        <div class="action-buttons">
+                            <div class="action-trigger">
+                                <button class="btn-action btn-blue" onclick="toggleActionMenu(this)">Acción</button>
+                                <div class="action-menu">
+                                    <div class="action-buttons">
+                                        <button class="btn-action btn-light-blue" onclick="assignFromRow(this)">Asignar</button>
+                                        <button class="btn-action btn-green" onclick="liberarFromRow(this)">Liberar</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="btn-action btn-gray" onclick="deleteItem(this)">Eliminar</button>
+                        </div>
+                    `;
+                } else {
+                    actionContainer.innerHTML = `
+                        <div class="action-buttons">
+                            <button class="btn-action btn-gray" onclick="deleteItem(this)">Eliminar</button>
+                        </div>
+                    `;
+                }
+                
+                newRow.innerHTML = `
+                    <td>${item.guia}</td>
+                    <td>${item.manifiesto}</td>
+                    <td class="${descClass}">${item.descripcion}</td>
+                    <td>${item.ciudad || ''}</td>
+                `;
+                
+                newRow.appendChild(actionContainer);
+            });
+            
+            updateCounter();
+        }
+        function processExcelData(data) {
+          return data.map(row => {
+            if (row.master && !row.ciudad) {
+              row.ciudad = masterCity; // Usa la ciudad previamente asignada
+            }
+            return row;
+          });
+        }
+        // Función para alternar menú de acción
+        function toggleActionMenu(button) {
+            const menu = button.nextElementSibling;
+            const allMenus = document.querySelectorAll('.action-menu');
+            
+            // Cerrar todos los otros menús
+            allMenus.forEach(m => {
+                if(m !== menu) m.style.display = 'none';
+            });
+            
+            // Alternar el menú actual
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+        
+        // Cerrar menús al hacer clic fuera
+        document.addEventListener('click', function(e) {
+            if(!e.target.closest('.action-trigger')) {
+                document.querySelectorAll('.action-menu').forEach(menu => {
+                    menu.style.display = 'none';
+                });
+            }
+        });
+
+        // Función para asignar manifiesto desde fila
+        async function assignFromRow(button) {
+            const row = button.closest('tr');
+            const manifiesto = row.cells[1].textContent;
+            
+            if (manifestAssignments[manifiesto]) {
+                const ciudad = manifestAssignments[manifiesto];
+                
+                // Actualizar TODAS las guías con este manifiesto
+                database.forEach(item => {
+                    if (item.manifiesto === manifiesto && item.descripcion === "RETENER") {
+                        item.ciudad = ciudad;
+                    }
+                });
+                
+                // Guardar cambios
+                await saveToGitHub();
+                loadData();
+            } else {
+                alert('Este manifiesto no tiene una ciudad asignada. Use el botón "Asignar Manifiesto" primero.');
+            }
+            
+            toggleActionMenu(button.closest('.action-trigger').querySelector('button'));
+        }
+
+        // Función para asignar un manifiesto (desde modal)
+        async function assignManifest() {
+            const manifiesto = document.getElementById('assign-manifiesto').value;
+            const ciudad = document.getElementById('assign-ciudad').value;
+            
+            if (!manifiesto || !ciudad) {
+                alert('Por favor complete todos los campos');
+                return;
+            }
+            
+            // 1. Guardar la asignación
+            manifestAssignments[manifiesto] = ciudad;
+            
+            // 2. Actualizar TODAS las guías con este manifiesto
+            database.forEach(item => {
+                if (item.manifiesto === manifiesto && item.descripcion === "RETENER") {
+                    item.ciudad = ciudad;
+                }
+            });
+            
+            // 3. Guardar cambios
+            try {
+                await saveToGitHub();
+                loadData();
+                
+                document.getElementById('assign-manifiesto').value = '';
+                document.getElementById('assign-ciudad').value = '';
+                closeAssignModal();
+            } catch (error) {
+                alert('Error al guardar los cambios');
+                console.error(error);
+            }
+        }
+
+        // Función para agregar nueva guía
+        async function addItem() {
+            const guia = document.getElementById('add-guia').value;
+            const manifiesto = document.getElementById('add-manifiesto').value;
+            const descripcion = document.getElementById('add-descripcion').value;
+            
+            if (!guia || !manifiesto || !descripcion) {
+                alert('Por favor complete los campos obligatorios');
+                return;
+            }
+            
+            // Verificar si la guía ya existe
+            if (database.some(item => item.guia === guia)) {
+                alert('Esta guía ya existe en el sistema');
+                return;
+            }
+            
+            // Asignar ciudad automáticamente si el manifiesto tiene una
+            let ciudad = '';
+            if (descripcion === "RETENER" && manifestAssignments[manifiesto]) {
+                ciudad = manifestAssignments[manifiesto];
+            }
+            
+            // Agregar nueva guía
+            database.push({
+                guia: guia,
+                manifiesto: manifiesto,
+                descripcion: descripcion,
+                ciudad: ciudad
+            });
+            
+            // Guardar cambios
+            try {
+                await saveToGitHub();
+                loadData();
+                
+                document.getElementById('add-guia').value = '';
+                document.getElementById('add-manifiesto').value = '';
+                document.getElementById('add-descripcion').value = '';
+                closeAddModal();
+            } catch (error) {
+                alert('Error al guardar el nuevo item');
+                console.error(error);
+            }
+        }
+
+        // Función para eliminar item
+        async function deleteItem(button) {
+            if (!confirm('¿Está seguro que desea eliminar este item?')) return;
+            
+            const row = button.closest('tr');
+            const guia = row.cells[0].textContent;
+            
+            // Eliminar de la base de datos
+            database = database.filter(item => item.guia !== guia);
+            
+            // Guardar en GitHub
+            try {
+                await saveToGitHub();
+                row.remove();
+                updateCounter();
+            } catch (error) {
+                alert('Error al eliminar el item');
+                console.error(error);
+            }
+        }
+
+        // Función para editar item
+        function editItem(button) {
+            const row = button.closest('tr');
+            currentEditingRow = row;
+            
+            const guia = row.cells[0].textContent;
+            const manifiesto = row.cells[1].textContent;
+            const descripcion = row.cells[2].textContent;
+            
+            document.getElementById('edit-guia').value = guia;
+            document.getElementById('edit-manifiesto').value = manifiesto;
+            document.getElementById('edit-descripcion').value = descripcion;
+            
+            document.getElementById('editModal').style.display = 'block';
+        }
+
+        // Función para guardar cambios
+        async function saveChanges() {
+            const guia = document.getElementById('edit-guia').value;
+            const manifiesto = document.getElementById('edit-manifiesto').value;
+            const descripcion = document.getElementById('edit-descripcion').value;
+            
+            if (!guia) {
+                alert('Por favor complete la guía');
+                return;
+            }
+            
+            currentEditingRow.cells[0].textContent = guia;
+            currentEditingRow.cells[1].textContent = manifiesto;
+            currentEditingRow.cells[2].textContent = descripcion;
+            
+            if (descripcion === "RETENER") {
+                // Mantener la ciudad si ya estaba asignada
+                const ciudad = currentEditingRow.cells[3].textContent;
+                if(ciudad === "GYE") {
+                    currentEditingRow.cells[2].className = 'retener-amarillo';
+                } else if(ciudad === "QUT") {
+                    currentEditingRow.cells[2].className = 'retener-naranja';
+                } else {
+                    currentEditingRow.cells[2].className = 'retener';
+                }
+                
+                // Actualizar botones de acción para RETENER
+                const actionCell = currentEditingRow.cells[4];
+                actionCell.innerHTML = `
+                    <div class="action-buttons">
+                        <div class="action-trigger">
+                            <button class="btn-action btn-blue" onclick="toggleActionMenu(this)">Acción</button>
+                            <div class="action-menu">
+                                <div class="action-buttons">
+                                    <button class="btn-action btn-light-blue" onclick="assignFromRow(this)">Asignar</button>
+                                    <button class="btn-action btn-green" onclick="liberarFromRow(this)">Liberar</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn-action btn-gray" onclick="deleteItem(this)">Eliminar</button>
+                    </div>
+                `;
+            } else if (descripcion === "LIBERAR") {
+                currentEditingRow.cells[2].className = 'liberar';
+                currentEditingRow.cells[3].textContent = '';
+                
+                // Actualizar botones de acción - solo Eliminar para LIBERAR
+                const actionCell = currentEditingRow.cells[4];
+                actionCell.innerHTML = `
+                    <div class="action-buttons">
+                        <button class="btn-action btn-gray" onclick="deleteItem(this)">Eliminar</button>
+                    </div>
+                `;
+            } else {
+                currentEditingRow.cells[2].className = '';
+                currentEditingRow.cells[3].textContent = '';
+                
+                // Para otros estados: Mostrar solo Eliminar
+                const actionCell = currentEditingRow.cells[4];
+                actionCell.innerHTML = `
+                    <div class="action-buttons">
+                        <button class="btn-action btn-gray" onclick="deleteItem(this)">Eliminar</button>
+                    </div>
+                `;
+            }
+            
+            // Actualizar en la base de datos
+            const index = database.findIndex(item => item.guia === currentEditingRow.cells[0].textContent);
+            if(index !== -1) {
+                database[index] = {
+                    guia: guia,
+                    manifiesto: manifiesto,
+                    descripcion: descripcion,
+                    ciudad: currentEditingRow.cells[3].textContent || ''
+                };
+                await saveToGitHub();
+            }
+            
+            closeEditModal();
+        }
+
+        // Función para liberar desde fila
+        async function liberarFromRow(button) {
+            const row = button.closest('tr');
+            const guia = row.cells[0].textContent;
+            
+            // Actualizar en la base de datos
+            const index = database.findIndex(item => item.guia === guia);
+            if(index !== -1) {
+                database[index].descripcion = "LIBERAR";
+                database[index].ciudad = '';
+                
+                try {
+                    await saveToGitHub();
+                    
+                    row.cells[2].textContent = "LIBERAR";
+                    row.cells[2].className = 'liberar';
+                    row.cells[3].textContent = '';
+                    
+                    // Actualizar botones de acción
+                    const actionCell = row.cells[4];
+                    actionCell.innerHTML = `
+                        <div class="action-buttons">
+                            <button class="btn-action btn-gray" onclick="deleteItem(this)">Eliminar</button>
+                        </div>
+                    `;
+                } catch (error) {
+                    alert('Error al liberar el item');
+                    console.error(error);
+                }
+            }
+            
+            toggleActionMenu(button.closest('.action-trigger').querySelector('button'));
+        }
+
+        // Función para importar desde Excel
+        async function handleFileImport(fileInput) {
+            const file = fileInput.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = async function(e) {
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, { type: 'array' });
+                
+                // Obtener la primera hoja
                 const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                
+                // Convertir a JSON
                 const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
                 
+                // Procesar los datos (omitir la primera fila de encabezados)
                 for (let i = 1; i < jsonData.length; i++) {
                     const rowData = jsonData[i];
                     if (rowData.length < 3) continue;
@@ -596,9 +975,11 @@
                     const descripcion = rowData[2]?.toString() || '';
                     const ciudad = rowData[3]?.toString() || '';
                     
+                    // Verificar si la guía ya existe
                     const existingIndex = database.findIndex(item => item.guia === guia);
                     
                     if (existingIndex === -1) {
+                        // Si no existe, agregar nueva
                         database.push({
                             guia: guia,
                             manifiesto: manifiesto,
@@ -606,10 +987,12 @@
                             ciudad: ciudad
                         });
                         
+                        // Si hay ciudad especificada, asignar al manifiesto
                         if (ciudad && (ciudad === "GYE" || ciudad === "QUT")) {
                             manifestAssignments[manifiesto] = ciudad;
                         }
                     } else {
+                        // Si existe, actualizar
                         database[existingIndex] = {
                             guia: guia,
                             manifiesto: manifiesto,
@@ -619,15 +1002,17 @@
                     }
                 }
                 
-                await saveToGitHub();
-                loadData();
-            } catch (error) {
-                alert('Error al procesar el archivo Excel');
-                console.error(error);
-            }
-        };
-        reader.readAsArrayBuffer(file);
-    }
+                // Guardar en GitHub
+                try {
+                    await saveToGitHub();
+                    loadData();
+                } catch (error) {
+                    alert('Error al guardar los datos importados');
+                    console.error(error);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
         
         // Función para actualizar el contador
         function updateCounter() {
@@ -671,5 +1056,4 @@
     </script>
 </body>
 </html>
-
 
