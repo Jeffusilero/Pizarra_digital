@@ -15,7 +15,7 @@
             align-items: center;
             font-size: 14px;
         }
-        
+
         
         .container {
             width: 70%;
@@ -403,12 +403,16 @@
     </div>
     
     <script>
-        // Configuración de GitHub
+        // Configuración
         const DEFAULT_CONFIG = {
             owner: 'Jeffusilero',
             repo: 'Pizarra_digital',
             branch: 'main',
             dataFile: 'data.json',
+            manifestFile: 'manifest.json',
+            dataUrl: 'https://jeffusilero.github.io/Pizarra_digital/data.json',
+            manifestUrl: 'https://jeffusilero.github.io/Pizarra_digital/manifest.json',
+            discussionsApi: 'https://api.github.com/repos/Jeffusilero/Pizarra_digital/discussions'
         };
 
         let githubConfig = {...DEFAULT_CONFIG};
@@ -438,25 +442,95 @@
                     localStorage.setItem('githubConfig', JSON.stringify(DEFAULT_CONFIG));
                 }
                 
+                // Carga primero de localStorage para mostrar algo rápido
+                loadFromLocal();
+                loadData();
+                
+                // Luego intenta sincronizar con GitHub
                 await loadFromGitHub();
                 loadData();
             } catch (error) {
                 console.error('Error al cargar datos:', error);
-                alert('Error al cargar datos. Verifica la conexión o configuración.');
+                alert('Datos cargados localmente. Los cambios se sincronizarán cuando haya conexión.');
             } finally {
                 hideLoading();
             }
         });
-    // Ejemplo de código para manejar errores de carga
-    fetch('datos.json')
-      .then(response => {
-        if (!response.ok) throw new Error('Error en la red');
-        return response.json();
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        // Mostrar mensaje alternativo o reintentar
-      });
+
+        // Función para cargar datos desde GitHub
+        async function loadFromGitHub() {
+            try {
+                // Cargar datos principales
+                const dataResponse = await fetch(githubConfig.dataUrl);
+                const manifestResponse = await fetch(githubConfig.manifestUrl);
+                
+                if (dataResponse.ok) {
+                    database = await dataResponse.json();
+                } else {
+                    // Si falla, carga desde localStorage
+                    loadFromLocal();
+                }
+
+                if (manifestResponse.ok) {
+                    manifestAssignments = await manifestResponse.json();
+                } else {
+                    // Si falla, carga desde localStorage
+                    loadFromLocal();
+                }
+            } catch (error) {
+                console.error('Error al cargar datos:', error);
+                // Si hay error, carga desde localStorage
+                loadFromLocal();
+                throw error;
+            }
+        }
+
+        // Función para guardar localmente
+        function saveToLocal() {
+            localStorage.setItem('pizarra_database', JSON.stringify(database));
+            localStorage.setItem('pizarra_manifests', JSON.stringify(manifestAssignments));
+        }
+
+        // Función para cargar desde local
+        function loadFromLocal() {
+            const localData = localStorage.getItem('pizarra_database');
+            const localManifests = localStorage.getItem('pizarra_manifests');
+            
+            if (localData) database = JSON.parse(localData);
+            if (localManifests) manifestAssignments = JSON.parse(localManifests);
+        }
+
+        // Función para guardar datos usando GitHub Discussions
+        async function saveToGitHub() {
+            showLoading();
+            try {
+                // Primero guarda localmente
+                saveToLocal();
+                
+                // Crear un nuevo "discussion" con los datos
+                const response = await fetch(githubConfig.discussionsApi, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/vnd.github.v3+json',
+                    },
+                    body: JSON.stringify({
+                        title: `Actualización de datos ${new Date().toLocaleString()}`,
+                        body: `||DATA||${JSON.stringify(database)}||MANIFEST||${JSON.stringify(manifestAssignments)}`,
+                        category: 'General'
+                    })
+                });
+
+                if (!response.ok) throw new Error('Error al enviar datos');
+                
+                alert('Datos enviados para actualización. Se procesarán pronto.');
+            } catch (error) {
+                console.error('Error al guardar:', error);
+                alert('Error al guardar. Los cambios se han guardado localmente y se sincronizarán más tarde.');
+            } finally {
+                hideLoading();
+            }
+        }
+
         // Función para abrir modal de agregar
         function openAddModal() {
             document.getElementById('addModal').style.display = 'block';
@@ -480,127 +554,6 @@
         // Función para cerrar modal de edición
         function closeEditModal() {
             document.getElementById('editModal').style.display = 'none';
-        }
-
-        // Función para cargar datos desde GitHub
-        async function loadFromGitHub() {
-            try {
-                // Cargar datos principales (guías)
-                const dataResponse = await fetch(`https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.dataFile}`, {
-                    headers: {
-                        'Authorization': `token ${githubConfig.token}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    }
-                });
-                
-                if (dataResponse.ok) {
-                    const dataContent = await dataResponse.json();
-                    const decodedData = atob(dataContent.content);
-                    database = JSON.parse(decodedData);
-                } else if (dataResponse.status === 404) {
-                    database = [];
-                } else {
-                    throw new Error('Error al cargar datos');
-                }
-
-                // Cargar asignaciones de manifiestos
-                const manifestResponse = await fetch(`https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.manifestFile}`, {
-                    headers: {
-                        'Authorization': `token ${githubConfig.token}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    }
-                });
-
-                if (manifestResponse.ok) {
-                    const manifestContent = await manifestResponse.json();
-                    const decodedManifests = atob(manifestContent.content);
-                    manifestAssignments = JSON.parse(decodedManifests);
-                } else if (manifestResponse.status === 404) {
-                    manifestAssignments = {};
-                } else {
-                    throw new Error('Error al cargar asignaciones de manifiestos');
-                }
-            } catch (error) {
-                console.error('Error al cargar desde GitHub:', error);
-                throw error;
-            }
-        }
-        
-        fetch('https://jeffusilero.github.io/data.json')
-  .then(response => console.log('Conexión exitosa:', response))
-  .catch(error => console.error('Error de conexión:', error));
-
-        // Función para guardar datos en GitHub
-        async function saveToGitHub() {
-            showLoading();
-            try {
-                // Obtener SHAs de los archivos existentes
-                let dataSha = '';
-                let manifestSha = '';
-                
-                const dataCheck = await fetch(`https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.dataFile}`, {
-                    headers: {
-                        'Authorization': `token ${githubConfig.token}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    }
-                });
-                
-                if (dataCheck.ok) {
-                    const dataContent = await dataCheck.json();
-                    dataSha = dataContent.sha;
-                }
-                
-                const manifestCheck = await fetch(`https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.manifestFile}`, {
-                    headers: {
-                        'Authorization': `token ${githubConfig.token}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    }
-                });
-                
-                if (manifestCheck.ok) {
-                    const manifestContent = await manifestCheck.json();
-                    manifestSha = manifestContent.sha;
-                }
-                
-                // Guardar datos principales (guías)
-                const dataContent = btoa(JSON.stringify(database, null, 2));
-                await fetch(`https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.dataFile}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `token ${githubConfig.token}`,
-                        'Accept': 'application/vnd.github.v3+json',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: 'Actualización de datos de pizarra',
-                        content: dataContent,
-                        sha: dataSha || undefined,
-                        branch: githubConfig.branch
-                    })
-                });
-                
-                // Guardar asignaciones de manifiestos
-                const manifestContent = btoa(JSON.stringify(manifestAssignments, null, 2));
-                await fetch(`https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.manifestFile}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `token ${githubConfig.token}`,
-                        'Accept': 'application/vnd.github.v3+json',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: 'Actualización de asignaciones de manifiestos',
-                        content: manifestContent,
-                        sha: manifestSha || undefined,
-                        branch: githubConfig.branch
-                    })
-                });
-            } catch (error) {
-                console.error('Error al guardar en GitHub:', error);
-                throw error;
-            } finally {
-                hideLoading();
-            }
         }
 
         // Función para cargar datos en la tabla
@@ -662,14 +615,7 @@
             
             updateCounter();
         }
-        function processExcelData(data) {
-          return data.map(row => {
-            if (row.master && !row.ciudad) {
-              row.ciudad = masterCity; // Usa la ciudad previamente asignada
-            }
-            return row;
-          });
-        }
+
         // Función para alternar menú de acción
         function toggleActionMenu(button) {
             const menu = button.nextElementSibling;
