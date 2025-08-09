@@ -1,0 +1,434 @@
+[
+  {
+    "guia": "GUA0799127940",
+    "manifiesto": "906-1324-4140",
+    "descripcion": "RETENER",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "NAR0919117647",
+    "manifiesto": "906-1325-5126",
+    "descripcion": "RETENER",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "HQS0738100534",
+    "manifiesto": "906-1317-1373",
+    "descripcion": "RETENER",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "ESM0920120013",
+    "manifiesto": "976-3045-4255",
+    "descripcion": "RETENER",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "GRD0920120392",
+    "manifiesto": "976-3045-8374",
+    "descripcion": "RETENER",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "QTS1012105583",
+    "manifiesto": "976-3045-8374",
+    "descripcion": "RETENER",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "SAN1012105594",
+    "manifiesto": "976-3045-8374",
+    "descripcion": "RETENER",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "GUA4951117678",
+    "manifiesto": "906-1328-3222",
+    "descripcion": "EDITAR DIRECCION",
+    "ciudad": "QUT"
+  },
+  {
+    "guia": "GUA4951117679",
+    "manifiesto": "906-1329-4072",
+    "descripcion": "EDITAR DIRECCION",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "CLC1812101948",
+    "manifiesto": "976-3049-6233",
+    "descripcion": "RETENER",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "CUE1012111203",
+    "manifiesto": "976-3049-6233",
+    "descripcion": "RETENER",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "EMP1812101951",
+    "manifiesto": "976-3049-6233",
+    "descripcion": "RETENER",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "GUA1012111229",
+    "manifiesto": "976-3049-6233",
+    "descripcion": "LIBERAR",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "GUA1834106794",
+    "manifiesto": "976-3049-6233",
+    "descripcion": "RETENER",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "MAN1012111186",
+    "manifiesto": "976-3049-6233",
+    "descripcion": "LIBERAR",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "QUT0431117687",
+    "manifiesto": "976-3049-6233",
+    "descripcion": "RETENER",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "QUT1012111129",
+    "manifiesto": "976-3049-6233",
+    "descripcion": "RETENER",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "SBD1783103178",
+    "manifiesto": "976-3049-6233",
+    "descripcion": "RETENER",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "SVT1592109224",
+    "manifiesto": "976-3049-6233",
+    "descripcion": "RETENER",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "AZO1783103207",
+    "manifiesto": "976-3050-1682",
+    "descripcion": "RETENER",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "ELX0343101010",
+    "manifiesto": "906-1327-7143",
+    "descripcion": "RETENER",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "CAN1810101368",
+    "manifiesto": "976-3050-1682",
+    "descripcion": "RETENER",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "ELX0799129494",
+    "manifiesto": "906-1329-4072",
+    "descripcion": "EDITAR DIRECCION",
+    "ciudad": "QUT"
+  },
+  {
+    "guia": "CHO0799129516",
+    "manifiesto": "906-1329-4013",
+    "descripcion": "EDITAR CIUDAD",
+    "ciudad": "QUT"
+  },
+  {
+    "guia": "MAN0800134185",
+    "manifiesto": "906-1330-4675",
+    "descripcion": "EDITAR TELEFONO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "MAN0800134186",
+    "manifiesto": "906-1329-3980",
+    "descripcion": "EDITAR TELEFONO",
+    "ciudad": "QUT"
+  },
+  {
+    "guia": "LAT1012111869",
+    "manifiesto": "906-1330-4616",
+    "descripcion": "EDITAR CIUDAD",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "",
+    "manifiesto": "",
+    "descripcion": "",
+    "ciudad": ""
+  },
+  {
+    "guia": "MAC1878100036",
+    "manifiesto": "976-3048-5663",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "AMB0800128955",
+    "manifiesto": "906-1318-7226",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "GUA0493140546",
+    "manifiesto": "906-1318-7226",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "CUE0570156093",
+    "manifiesto": "906-1318-7226",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "DRN1012106138",
+    "manifiesto": "976-3045-8680",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "QUT4951109226",
+    "manifiesto": "976-3045-8584",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "LMN0280104624",
+    "manifiesto": "906-1314-6840",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "GUA1783103230",
+    "manifiesto": "906-1327-7165",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "AZO1783103208",
+    "manifiesto": "976-3050-1682",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "LLT1783103226",
+    "manifiesto": "906-1327-7165",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "BHY4951116741",
+    "manifiesto": "976-3050-1682",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "MAN1012110997",
+    "manifiesto": "976-3050-1682",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "QTS1170100524",
+    "manifiesto": "906-1327-5054",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "ELX0343101011",
+    "manifiesto": "906-1327-7143",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "GUA1693105812",
+    "manifiesto": "976-3050-1892",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "MAC1811101185",
+    "manifiesto": "906-1329-4083",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "NAR1714105701",
+    "manifiesto": "906-1329-4083",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "QUE0592119368",
+    "manifiesto": "906-1329-4083",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "GUA0846123221",
+    "manifiesto": "906-1329-4083",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "GUA1783103229",
+    "manifiesto": "906-1327-7165",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "AZO1783103209",
+    "manifiesto": "976-3050-1682",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "GUA1804100173",
+    "manifiesto": "976-3049-6266",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "POR0932118408",
+    "manifiesto": "976-3049-6266",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "QUE1875100069",
+    "manifiesto": "976-3049-6266",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "ELX0343101009",
+    "manifiesto": "906-1327-7143",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "CAN1810101367",
+    "manifiesto": "976-3049-6266",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "GUA1834107439",
+    "manifiesto": "906-1329-4024",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "MAN0934114332",
+    "manifiesto": "906-1329-4024",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "CUE1012111779",
+    "manifiesto": "906-1329-4024",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "GUA1581106271",
+    "manifiesto": "906-1329-4024",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "GUA1834107402",
+    "manifiesto": "906-1329-4024",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "GUA1834107410",
+    "manifiesto": "906-1329-4024",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "GUA1834107412",
+    "manifiesto": "906-1329-4024",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "GUA1834107415",
+    "manifiesto": "906-1329-4024",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "GUA1834107416",
+    "manifiesto": "906-1329-4024",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "GUA1834107428",
+    "manifiesto": "906-1329-4024",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "GUA1834107431",
+    "manifiesto": "906-1329-4024",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "GUA1834107432",
+    "manifiesto": "906-1329-4024",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "GUA1834107435",
+    "manifiesto": "906-1329-4024",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "GUA1834107436",
+    "manifiesto": "906-1329-4024",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "GUA1834107437",
+    "manifiesto": "906-1329-4024",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "RIO1782101443",
+    "manifiesto": "906-1327-7165",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "RIO1782101444",
+    "manifiesto": "906-1327-7165",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  },
+  {
+    "guia": "AMB1719100273",
+    "manifiesto": "906-1327-7176",
+    "descripcion": "RETENIDO",
+    "ciudad": "GYE"
+  }
+]
