@@ -8,6 +8,15 @@
             font-size: 14px;
         }
 
+        /* Estilo para inputs de login */
+        #login-email, #login-password {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
         
         .container {
             width: 70%;

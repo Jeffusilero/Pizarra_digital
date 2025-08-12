@@ -27,6 +27,50 @@
         let database = [];
         let manifestAssignments = {};
         let currentEditingRow = null;
+
+                // Función para mostrar el modal de login
+        function showLoginModal() {
+            document.getElementById('loginModal').style.display = 'block';
+        }
+
+        // Función para autenticar usuario
+        async function loginUser() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            showLoading();
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                document.getElementById('loginModal').style.display = 'none';
+                window.location.reload(); // Recarga para cargar datos
+            } catch (error) {
+                alert("Error de autenticación: " + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Modifica el event listener de carga para verificar autenticación
+        document.addEventListener('DOMContentLoaded', async function() {
+            showLoading();
+            
+            // Verifica si el usuario está logueado
+            auth.onAuthStateChanged(async (user) => {
+                if (user) {
+                    try {
+                        await loadFromGitHub();
+                        loadData();
+                    } catch (error) {
+                        console.error('Error al cargar datos:', error);
+                        alert('Error al cargar datos. Recarga la página.');
+                    }
+                } else {
+                    showLoginModal(); // Muestra el login si no está autenticado
+                }
+                hideLoading();
+            });
+        });
+
         
         // Mostrar estado de carga
         function showLoading() {
