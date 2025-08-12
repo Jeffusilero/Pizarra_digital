@@ -1,4 +1,20 @@
-        // Configuración
+        // Configuración de Firebase (usa tus propios datos)
+        const firebaseConfig = {
+        apiKey: "AIzaSyD7ZJ5qaJ4tsy-1RG1f01RsRS42R900NAA",
+        authDomain: "pizarra-digital-29922.firebaseapp.com",
+        projectId: "pizarra-digital-29922",
+        storageBucket: "pizarra-digital-29922.appspot.com",
+        messagingSenderId: "2056e8287574",
+        appId: "1:2056e8287574:web:e56c9f071966d89777Abb7",
+        measurementId: "G-6KWBOH070C"
+        };
+
+        // Inicializa Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        // Configuración original (se mantiene)
         const DEFAULT_CONFIG = {
             owner: 'Jeffusilero',
             repo: 'Pizarra_digital',
@@ -39,14 +55,11 @@
         // Función para cargar datos desde GitHub
         async function loadFromGitHub() {
             try {
-                // Usamos raw.githubusercontent.com para evitar problemas de caché
-                const dataResponse = await fetch(`${githubConfig.rawDataUrl}?t=${Date.now()}`);
-                if (!dataResponse.ok) throw new Error('Error al cargar datos');
-                database = await dataResponse.json();
-                
-                const manifestResponse = await fetch(`${githubConfig.manifestUrl}?t=${Date.now()}`);
-                if (manifestResponse.ok) {
-                    manifestAssignments = await manifestResponse.json();
+                const doc = await db.collection("pizarra").doc("datos").get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    database = data.database || [];
+                    manifestAssignments = data.manifest || {};
                 }
             } catch (error) {
                 console.error('Error al cargar datos:', error);
@@ -54,35 +67,18 @@
             }
         }
 
-        // Función para guardar datos usando GitHub API
+        // Función para guardar datos (ahora en Firestore)
         async function saveToGitHub() {
             showLoading();
             try {
-                // Dispara un evento de repository_dispatch sin usar token en el frontend
-                const response = await fetch(`https://api.github.com/repos/Jeffusilero/Pizarra_digital/dispatches`, {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/vnd.github.v3+json',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        event_type: 'update-data',
-                        client_payload: {
-                            database: database,
-                            manifest: manifestAssignments
-                        }
-                    })
+                await db.collection("pizarra").doc("datos").set({
+                    database,
+                    manifest: manifestAssignments
                 });
-
-                if (!response.ok) throw new Error('Error al enviar datos');
-                
-                setTimeout(() => {
-                    alert('Datos enviados para actualización. La página se recargará en 5 segundos.');
-                    window.location.reload();
-                }, 5000);
+                alert('Datos guardados correctamente.');
             } catch (error) {
                 console.error('Error al guardar:', error);
-                alert('Error al guardar. Los cambios se han perdido. Por favor inténtalo nuevamente.');
+                alert('Error al guardar. Por favor inténtalo nuevamente.');
             } finally {
                 hideLoading();
             }
