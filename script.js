@@ -1,40 +1,34 @@
-        // Configuración de Firebase (usa tus propios datos)
-        const firebaseConfig = {
-        apiKey: "AIzaSyD7ZJ5qaJ4tsy-1RG1f01RsRS42R900NAA",
-        authDomain: "pizarra-digital-29922.firebaseapp.com",
-        projectId: "pizarra-digital-29922",
-        storageBucket: "pizarra-digital-29922.appspot.com",
-        messagingSenderId: "2056e8287574",
-        appId: "1:2056e8287574:web:e56c9f071966d89777Abb7",
-        measurementId: "G-6KWBOH070C"
-        };
+            // Configuración de Firebase
+            const firebaseConfig = {
+            apiKey: "AIzaSyD7ZJ5qaJ4tsy-1RG1f01RsRS42R900NAA",
+            authDomain: "pizarra-digital-29922.firebaseapp.com",
+            projectId: "pizarra-digital-29922",
+            storageBucket: "pizarra-digital-29922.appspot.com",
+            messagingSenderId: "2056e8287574",
+            appId: "1:2056e8287574:web:e56c9f071966d89777Abb7",
+            measurementId: "G-6KWBOH070C"
+            };
 
-        // Inicializa Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const auth = firebase.auth();
+            // Inicialización de Firebase
+            const app = firebase.initializeApp(firebaseConfig);
+            const db = firebase.firestore();
+            const auth = firebase.auth();
 
-        // Configuración original (se mantiene)
-        const DEFAULT_CONFIG = {
-            owner: 'Jeffusilero',
-            repo: 'Pizarra_digital',
-            dataUrl: 'https://jeffusilero.github.io/Pizarra_digital/data.json',
-            manifestUrl: 'https://jeffusilero.github.io/Pizarra_digital/manifest.json',
-            rawDataUrl: 'https://raw.githubusercontent.com/Jeffusilero/Pizarra_digital/main/data.json'
-        };
+            // Configuración de persistencia de sesión
+            auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+            .catch(error => console.error("Error en persistencia:", error));
 
-        let githubConfig = {...DEFAULT_CONFIG};
-        let database = [];
-        let manifestAssignments = {};
-        let currentEditingRow = null;
+            // Variables globales
+            let database = [];
+            let manifestAssignments = {};
+            let currentEditingRow = null;
 
-                // Función para mostrar el modal de login
-        function showLoginModal() {
+            // ================== FUNCIONES DE AUTENTICACIÓN ================== //
+            function showLoginModal() {
             document.getElementById('loginModal').style.display = 'block';
-        }
+            }
 
-        // Función para autenticar usuario
-        async function loginUser() {
+            async function loginUser() {
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
             
@@ -42,97 +36,142 @@
             try {
                 await auth.signInWithEmailAndPassword(email, password);
                 document.getElementById('loginModal').style.display = 'none';
-                window.location.reload(); // Recarga para cargar datos
+                loadAppData(); // Cargar datos después de autenticar
             } catch (error) {
-                alert("Error de autenticación: " + error.message);
+                alert(`Error de autenticación: ${error.message}`);
             } finally {
                 hideLoading();
             }
-        }
+            }
 
-        // Modifica el event listener de carga para verificar autenticación
-        document.addEventListener('DOMContentLoaded', async function() {
+            function logoutUser() {
+            auth.signOut()
+                .then(() => window.location.reload())
+                .catch(error => alert(`Error al cerrar sesión: ${error.message}`));
+            }
+
+            // ================== FUNCIONES PRINCIPALES ================== //
+            async function loadAppData() {
+            showLoading();
+            try {
+                await loadFromFirestore();
+                loadData();
+            } catch (error) {
+                console.error("Error cargando datos:", error);
+                alert("Error al cargar datos. Recarga la página.");
+            } finally {
+                hideLoading();
+            }
+            }
+
+            async function loadFromFirestore() {
+            const doc = await db.collection("pizarra").doc("datos").get();
+            
+            if (!doc.exists) {
+                await db.collection("pizarra").doc("datos").set({
+                database: [],
+                manifest: {}
+                });
+            }
+            
+            const data = doc.data() || {};
+            database = data.database || [];
+            manifestAssignments = data.manifest || {};
+            }
+
+            async function saveToFirestore() {
+            showLoading();
+            try {
+                await db.collection("pizarra").doc("datos").set({
+                database,
+                manifest: manifestAssignments
+                });
+            } catch (error) {
+                console.error("Error guardando datos:", error);
+                throw error;
+            } finally {
+                hideLoading();
+            }
+            }
+
+            // ================== FUNCIONES DE INTERFAZ ================== //
+            function loadData() {
+            const tableBody = document.getElementById('pizarra-table').getElementsByTagName('tbody')[0];
+            tableBody.innerHTML = '';
+            
+            database.forEach(item => {
+                const newRow = tableBody.insertRow();
+                let descClass = '';
+                
+                if(item.descripcion === "RETENER") {
+                descClass = item.ciudad === "GYE" ? 'retener-amarillo' : 
+                            item.ciudad === "QUT" ? 'retener-naranja' : 'retener';
+                } else if(item.descripcion === "LIBERAR") {
+                descClass = 'liberar';
+                }
+                
+                newRow.innerHTML = `
+                <td>${item.guia}</td>
+                <td>${item.manifiesto}</td>
+                <td class="${descClass}">${item.descripcion}</td>
+                <td>${item.ciudad || ''}</td>
+                <td>${generateActionButtons(item.descripcion)}</td>
+                `;
+            });
+            
+            updateCounter();
+            }
+
+            function generateActionButtons(descripcion) {
+            if (descripcion === "RETENER") {
+                return `
+                <div class="action-buttons">
+                    <div class="action-trigger">
+                    <button class="btn-action btn-blue" onclick="toggleActionMenu(this)">Acción</button>
+                    <div class="action-menu">
+                        <button class="btn-action btn-light-blue" onclick="assignFromRow(this)">Asignar</button>
+                        <button class="btn-action btn-green" onclick="liberarFromRow(this)">Liberar</button>
+                    </div>
+                    </div>
+                    <button class="btn-action btn-gray" onclick="deleteItem(this)">Eliminar</button>
+                </div>
+                `;
+            }
+            return `
+                <div class="action-buttons">
+                <button class="btn-action btn-gray" onclick="deleteItem(this)">Eliminar</button>
+                </div>
+            `;
+            }
+
+            // ================== EVENT LISTENERS ================== //
+            document.addEventListener('DOMContentLoaded', () => {
             showLoading();
             
-            // Verifica si el usuario está logueado
-            auth.onAuthStateChanged(async (user) => {
-            if (user) {
-                console.log("Usuario autenticado:", user.email); // ← Verifica esto en consola
-                try {
-                await loadFromGitHub();
-                loadData();
-                } catch (error) {
-                console.error("Error post-autenticación:", error);
-                }
-            } else {
-                console.log("No hay usuario autenticado"); // ← Esto debería aparecer primero
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                console.log("Usuario autenticado:", user.email);
+                loadAppData();
+                } else {
+                console.log("No autenticado - Mostrando login");
                 showLoginModal();
-            }
-            hideLoading();
-            });
-        });
-
-        
-        // Mostrar estado de carga
-        function showLoading() {
-            document.getElementById('loading').style.display = 'flex';
-        }
-        
-        // Ocultar estado de carga
-        function hideLoading() {
-            document.getElementById('loading').style.display = 'none';
-        }
-
-        // Al cargar la página
-        document.addEventListener('DOMContentLoaded', async function() {
-            showLoading();
-            try {
-                await loadFromGitHub();
-                loadData();
-            } catch (error) {
-                console.error('Error al cargar datos:', error);
-                alert('Error al cargar datos. Por favor recarga la página.');
-            } finally {
-                hideLoading();
-            }
-        });
-
-        // Función para cargar datos desde GitHub
-            async function loadFromGitHub() {
-            try {
-                const doc = await db.collection("pizarra").doc("datos").get();
-                if (!doc.exists) {
-                // Si el documento no existe, créalo con valores por defecto
-                await db.collection("pizarra").doc("datos").set({
-                    database: [],
-                    manifest: {}
-                });
                 }
-                const data = doc.data();
-                database = data.database || [];
-                manifestAssignments = data.manifest || {};
-            } catch (error) {
-                console.error("Error en loadFromGitHub:", error);
-                throw error;
-            }
+            });
+            });
+
+            // ================== FUNCIONES AUXILIARES ================== //
+            function showLoading() {
+            document.getElementById('loading').style.display = 'flex';
             }
 
-        // Función para guardar datos (ahora en Firestore)
-        async function saveToGitHub() {
-            showLoading();
-            try {
-                await db.collection("pizarra").doc("datos").set({
-                    database,
-                    manifest: manifestAssignments
-                });
-                alert('Datos guardados correctamente.');
-            } catch (error) {
-                console.error('Error al guardar:', error);
-                alert('Error al guardar. Por favor inténtalo nuevamente.');
-            } finally {
-                hideLoading();
+            function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
             }
-        }
+
+            function updateCounter() {
+            const count = database.length;
+            document.getElementById('itemCounter').textContent = `${count} ${count === 1 ? 'item' : 'items'}`;
+            }
 
         // Función para abrir modal de agregar
         function openAddModal() {
