@@ -1,3 +1,4 @@
+         
             // Configuración de Firebase
             const firebaseConfig = {
             apiKey: "AIzaSyD7ZJ5qaJ4tsy-1RG1f01RsRS42R900NAA",
@@ -9,10 +10,20 @@
             measurementId: "G-6KWBOH070C"
             };
 
-            // Inicialización de Firebase
+            // Inicialización con persistencia
             const app = firebase.initializeApp(firebaseConfig);
-            const db = firebase.firestore();
             const auth = firebase.auth();
+
+            auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+            .then(() => {
+                auth.onAuthStateChanged(user => {
+                if (!user) {
+                    // Autenticación anónima como respaldo
+                    auth.signInAnonymously()
+                    .catch(error => console.error("Error auth anónima:", error));
+                }
+                });
+            });
 
             // Configuración de persistencia de sesión
             auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
@@ -65,18 +76,25 @@
             }
 
             async function loadFromFirestore() {
-            const doc = await db.collection("pizarra").doc("datos").get();
-            
-            if (!doc.exists) {
+            try {
+                const user = auth.currentUser;
+                if (!user) throw new Error("Usuario no autenticado");
+                
+                const doc = await db.collection("pizarra").doc("datos").get();
+                
+                if (!doc.exists) {
                 await db.collection("pizarra").doc("datos").set({
-                database: [],
-                manifest: {}
+                    database: [],
+                    manifest: {}
                 });
+                return { database: [], manifest: {} };
+                }
+                
+                return doc.data();
+            } catch (error) {
+                console.error("Error en loadFromFirestore:", error);
+                throw error;
             }
-            
-            const data = doc.data() || {};
-            database = data.database || [];
-            manifestAssignments = data.manifest || {};
             }
 
             async function saveToFirestore() {
