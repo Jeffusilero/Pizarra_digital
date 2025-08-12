@@ -56,18 +56,19 @@
             
             // Verifica si el usuario está logueado
             auth.onAuthStateChanged(async (user) => {
-                if (user) {
-                    try {
-                        await loadFromGitHub();
-                        loadData();
-                    } catch (error) {
-                        console.error('Error al cargar datos:', error);
-                        alert('Error al cargar datos. Recarga la página.');
-                    }
-                } else {
-                    showLoginModal(); // Muestra el login si no está autenticado
+            if (user) {
+                console.log("Usuario autenticado:", user.email); // ← Verifica esto en consola
+                try {
+                await loadFromGitHub();
+                loadData();
+                } catch (error) {
+                console.error("Error post-autenticación:", error);
                 }
-                hideLoading();
+            } else {
+                console.log("No hay usuario autenticado"); // ← Esto debería aparecer primero
+                showLoginModal();
+            }
+            hideLoading();
             });
         });
 
@@ -97,19 +98,24 @@
         });
 
         // Función para cargar datos desde GitHub
-        async function loadFromGitHub() {
+            async function loadFromGitHub() {
             try {
                 const doc = await db.collection("pizarra").doc("datos").get();
-                if (doc.exists) {
-                    const data = doc.data();
-                    database = data.database || [];
-                    manifestAssignments = data.manifest || {};
+                if (!doc.exists) {
+                // Si el documento no existe, créalo con valores por defecto
+                await db.collection("pizarra").doc("datos").set({
+                    database: [],
+                    manifest: {}
+                });
                 }
+                const data = doc.data();
+                database = data.database || [];
+                manifestAssignments = data.manifest || {};
             } catch (error) {
-                console.error('Error al cargar datos:', error);
+                console.error("Error en loadFromGitHub:", error);
                 throw error;
             }
-        }
+            }
 
         // Función para guardar datos (ahora en Firestore)
         async function saveToGitHub() {
