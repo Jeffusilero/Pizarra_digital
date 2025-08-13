@@ -139,8 +139,8 @@ function loadData() {
     const newRow = tableBody.insertRow();
     let descClass = '';
     
-    // Obtener ciudad del manifiesto (para CUALQUIER descripción)
-    const ciudad = manifestAssignments[item.manifiesto] || item.ciudad || '';
+    // Obtener ciudad (combinando manifiesto asignado y ciudad directa)
+    const ciudad = item.ciudad || manifestAssignments[item.manifiesto] || '';
     
     if(item.descripcion === "RETENER") {
       descClass = ciudad === "GYE" ? 'retener-amarillo' : 
@@ -153,7 +153,7 @@ function loadData() {
       <td>${item.guia}</td>
       <td>${item.manifiesto}</td>
       <td class="${descClass}">${item.descripcion}</td>
-      <td>${ciudad}</td> <!-- Muestra ciudad si el manifiesto está asignado -->
+      <td>${ciudad}</td>
       <td>${generateActionButtons(item.descripcion)}</td>
     `;
   });
@@ -217,6 +217,19 @@ async function addItem() {
     alert('Por favor complete los campos obligatorios');
     return;
   }
+
+    try {
+    await saveToFirestore();
+    loadData();
+    // Limpiar campos después de agregar
+    document.getElementById('add-guia').value = '';
+    document.getElementById('add-manifiesto').value = '';
+    document.getElementById('add-descripcion').value = '';
+    closeAddModal();
+  } catch (error) {
+    console.error(error);
+  }
+
   
   // Busca ciudad asignada al manifiesto (para CUALQUIER descripción)
   const ciudad = manifestAssignments[manifiesto] || '';
@@ -240,6 +253,13 @@ async function addItem() {
 async function assignManifest() {
   const manifiesto = document.getElementById('assign-manifiesto').value.trim();
   const ciudad = document.getElementById('assign-ciudad').value;
+
+  // Actualiza TODAS las guías con este manifiesto
+database.forEach(item => {
+  if (item.manifiesto === manifiesto) {
+    item.ciudad = ciudad;
+  }
+});
   
   if (!manifiesto || !ciudad) {
     alert('Complete todos los campos');
