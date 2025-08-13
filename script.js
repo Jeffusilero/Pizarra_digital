@@ -1,14 +1,16 @@
+/**************************************
+ * VARIABLES GLOBALES Y CONFIGURACIÓN *
+ **************************************/
 let database = [];
 let manifestAssignments = {};
 let currentEditingRow = null;
-const LOADING_TIMEOUT = 10000; // 10 segundos
 
-// Configuración de Firebase
+// Configuración de Firebase (REEMPLAZA CON TUS DATOS)
 const firebaseConfig = {
   apiKey: "AIzaSyD7ZJ5qaJ4tsy-lRCifOiRsRS42R9OQKNA",
   authDomain: "pizarra-digital-29922.firebaseapp.com",
   projectId: "pizarra-digital-29922",
-  storageBucket: "pizarra-digital-29922.firebasestorage.app",
+  storageBucket: "pizarra-digital-29922.appspot.com",
   messagingSenderId: "205605287574",
   appId: "1:205605287574:web:e56c8f071906d89f7774b7",
   measurementId: "G-6KWBGN070G"
@@ -19,88 +21,50 @@ const app = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// Función de carga con timeout
-function handleAppLoad() {
+/*****************************
+ * AUTENTICACIÓN CON GOOGLE *
+ *****************************/
+function loginWithGoogle() {
   showLoading();
+  const provider = new firebase.auth.GoogleAuthProvider();
   
-  const timeoutId = setTimeout(() => {
-    hideLoading();
-    showLoginModal();
-    console.error("Tiempo de carga excedido");
-  }, LOADING_TIMEOUT);
-
-  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-    .then(() => {
-      console.log("Persistencia configurada correctamente");
-      initAuthStateListener();
+  auth.signInWithPopup(provider)
+    .then((result) => {
+      console.log("Usuario de Google:", result.user.displayName);
     })
-    .catch(error => {
-      console.error("Error configurando persistencia:", error);
-      showLoginModal();
+    .catch((error) => {
+      console.error("Error en login con Google:", error);
+      alert(`Error: ${error.message}`);
     })
-    .finally(() => clearTimeout(timeoutId));
-}
-
-// ================== FUNCIONES DE AUTENTICACIÓN ================== //
-function initAuthStateListener() {
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      console.log("Usuario autenticado:", user.email);
-      document.getElementById('loginModal').style.display = 'none';
-      loadAppData();
-    } else {
-      console.log("No hay usuario autenticado");
-      showLoginModal();
-      
-      // Autenticación anónima como respaldo
-      auth.signInAnonymously().catch(error => console.error("Error auth anónima:", error));
-    }
-  });
-}
-
-function showLoginModal() {
-  const loginModal = document.getElementById('loginModal');
-  if (loginModal) {
-    loginModal.style.display = 'block';
-  } else {
-    console.error("Modal de login no encontrado");
-  }
-}
-
-async function loginUser() {
-  const email = document.getElementById('login-email').value;
-  const password = document.getElementById('login-password').value;
-  
-  if (!email || !password) {
-    alert("Por favor ingrese correo y contraseña");
-    return;
-  }
-
-  showLoading();
-  try {
-    await auth.signInWithEmailAndPassword(email, password);
-  } catch (error) {
-    hideLoading();
-    const errorMessage = error.code === 'auth/user-not-found' 
-      ? "Usuario no registrado" 
-      : error.code === 'auth/wrong-password'
-      ? "Contraseña incorrecta"
-      : "Error de autenticación";
-    alert(`${errorMessage}. Código: ${error.code}`);
-  }
+    .finally(() => hideLoading());
 }
 
 function logoutUser() {
   showLoading();
   auth.signOut()
     .then(() => window.location.reload())
-    .catch(error => {
+    .catch((error) => {
       console.error("Error al cerrar sesión:", error);
       hideLoading();
     });
 }
 
-// ================== FUNCIONES PRINCIPALES ================== //
+// Listener de estado de autenticación
+function initAuthStateListener() {
+  auth.onAuthStateChanged((user) => {
+    if (user) {
+      console.log("Usuario autenticado:", user.displayName);
+      loadAppData();
+    } else {
+      console.log("No autenticado - Redirigiendo a Google");
+      loginWithGoogle(); // Login automático con Google
+    }
+  });
+}
+
+/*****************************
+ * FUNCIONES PRINCIPALES *
+ *****************************/
 async function loadAppData() {
   showLoading();
   try {
@@ -130,7 +94,6 @@ async function loadFromFirestore() {
       });
       return { database: [], manifest: {} };
     }
-    
     return doc.data();
   } catch (error) {
     console.error("Error en loadFromFirestore:", error);
@@ -153,7 +116,9 @@ async function saveToFirestore() {
   }
 }
 
-// ================== FUNCIONES DE INTERFAZ ================== //
+/*****************************
+ * FUNCIONES DE INTERFAZ *
+ *****************************/
 function loadData() {
   const tableBody = document.getElementById('pizarra-table').getElementsByTagName('tbody')[0];
   tableBody.innerHTML = '';
@@ -177,7 +142,6 @@ function loadData() {
       <td>${generateActionButtons(item.descripcion)}</td>
     `;
   });
-  
   updateCounter();
 }
 
@@ -203,7 +167,9 @@ function generateActionButtons(descripcion) {
   `;
 }
 
-// ================== FUNCIONES DE MODALES ================== //
+/*****************************
+ * FUNCIONES DE MODALES *
+ *****************************/
 function openAddModal() {
   document.getElementById('addModal').style.display = 'block';
 }
@@ -224,7 +190,9 @@ function closeEditModal() {
   document.getElementById('editModal').style.display = 'none';
 }
 
-// ================== FUNCIONES DE OPERACIONES ================== //
+/*****************************
+ * FUNCIONES DE OPERACIONES *
+ *****************************/
 async function addItem() {
   const guia = document.getElementById('add-guia').value;
   const manifiesto = document.getElementById('add-manifiesto').value;
@@ -459,7 +427,9 @@ async function assignFromRow(button) {
   toggleActionMenu(button.closest('.action-trigger').querySelector('button'));
 }
 
-// ================== FUNCIONES AUXILIARES ================== //
+/*****************************
+ * FUNCIONES AUXILIARES *
+ *****************************/
 function showLoading() {
   document.getElementById('loading').style.display = 'flex';
 }
@@ -475,68 +445,7 @@ function updateCounter() {
 
 function toggleActionMenu(button) {
   const menu = button.nextElementSibling;
-  const allMenus = document.querySelectorAll('.action-menu');
-  
-  allMenus.forEach(m => {
-    if(m !== menu) m.style.display = 'none';
-  });
-  
   menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-}
-
-async function handleFileImport(fileInput) {
-  const file = fileInput.files[0];
-  if (!file) return;
-  
-  const reader = new FileReader();
-  reader.onload = async function(e) {
-    const data = new Uint8Array(e.target.result);
-    const workbook = XLSX.read(data, { type: 'array' });
-    
-    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-    
-    for (let i = 1; i < jsonData.length; i++) {
-      const rowData = jsonData[i];
-      if (rowData.length < 3) continue;
-      
-      const guia = rowData[0]?.toString() || '';
-      const manifiesto = rowData[1]?.toString() || '';
-      const descripcion = rowData[2]?.toString() || '';
-      const ciudad = rowData[3]?.toString() || '';
-      
-      const existingIndex = database.findIndex(item => item.guia === guia);
-      
-      if (existingIndex === -1) {
-        database.push({
-          guia: guia,
-          manifiesto: manifiesto,
-          descripcion: descripcion,
-          ciudad: ciudad
-        });
-        
-        if (ciudad && (ciudad === "GYE" || ciudad === "QUT")) {
-          manifestAssignments[manifiesto] = ciudad;
-        }
-      } else {
-        database[existingIndex] = {
-          guia: guia,
-          manifiesto: manifiesto,
-          descripcion: descripcion,
-          ciudad: ciudad
-        };
-      }
-    }
-    
-    try {
-      await saveToFirestore();
-      loadData();
-    } catch (error) {
-      alert('Error al guardar los datos importados');
-      console.error(error);
-    }
-  };
-  reader.readAsArrayBuffer(file);
 }
 
 function filterTable() {
@@ -554,25 +463,27 @@ function filterTable() {
   }
 }
 
-// Cerrar modales al hacer clic fuera
-window.onclick = function(event) {
-  const addModal = document.getElementById('addModal');
-  const assignModal = document.getElementById('assignModal');
-  const editModal = document.getElementById('editModal');
-  
-  if (event.target == addModal) closeAddModal();
-  if (event.target == assignModal) closeAssignModal();
-  if (event.target == editModal) closeEditModal();
-}
-
-// Cerrar menús de acción al hacer clic fuera
+/*****************************
+ * EVENT LISTENERS *
+ *****************************/
 document.addEventListener('click', function(e) {
+  // Cerrar menús de acción al hacer clic fuera
   if(!e.target.closest('.action-trigger')) {
     document.querySelectorAll('.action-menu').forEach(menu => {
       menu.style.display = 'none';
     });
   }
+  
+  // Cerrar modales al hacer clic fuera
+  const modals = ['addModal', 'assignModal', 'editModal'];
+  modals.forEach(modalId => {
+    if (e.target == document.getElementById(modalId)) {
+      document.getElementById(modalId).style.display = 'none';
+    }
+  });
 });
 
 // Inicialización al cargar la página
-document.addEventListener('DOMContentLoaded', handleAppLoad);
+document.addEventListener('DOMContentLoaded', () => {
+  initAuthStateListener();
+});
