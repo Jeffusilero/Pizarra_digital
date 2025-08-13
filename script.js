@@ -139,9 +139,12 @@ function loadData() {
     const newRow = tableBody.insertRow();
     let descClass = '';
     
+    // Obtener ciudad del manifiesto (para CUALQUIER descripción)
+    const ciudad = manifestAssignments[item.manifiesto] || item.ciudad || '';
+    
     if(item.descripcion === "RETENER") {
-      descClass = item.ciudad === "GYE" ? 'retener-amarillo' : 
-                 item.ciudad === "QUT" ? 'retener-naranja' : 'retener';
+      descClass = ciudad === "GYE" ? 'retener-amarillo' : 
+                 ciudad === "QUT" ? 'retener-naranja' : 'retener';
     } else if(item.descripcion === "LIBERAR") {
       descClass = 'liberar';
     }
@@ -150,7 +153,7 @@ function loadData() {
       <td>${item.guia}</td>
       <td>${item.manifiesto}</td>
       <td class="${descClass}">${item.descripcion}</td>
-      <td>${item.ciudad || ''}</td>
+      <td>${ciudad}</td> <!-- Muestra ciudad si el manifiesto está asignado -->
       <td>${generateActionButtons(item.descripcion)}</td>
     `;
   });
@@ -215,32 +218,21 @@ async function addItem() {
     return;
   }
   
-  if (database.some(item => item.guia === guia)) {
-    alert('Esta guía ya existe en el sistema');
-    return;
-  }
-  
-  let ciudad = '';
-  if (descripcion === "RETENER" && manifestAssignments[manifiesto]) {
-    ciudad = manifestAssignments[manifiesto];
-  }
+  // Busca ciudad asignada al manifiesto (para CUALQUIER descripción)
+  const ciudad = manifestAssignments[manifiesto] || '';
   
   database.push({
     guia: guia,
     manifiesto: manifiesto,
     descripcion: descripcion,
-    ciudad: ciudad
+    ciudad: ciudad // Asigna la ciudad si el manifiesto existe
   });
   
   try {
     await saveToFirestore();
     loadData();
-    document.getElementById('add-guia').value = '';
-    document.getElementById('add-manifiesto').value = '';
-    document.getElementById('add-descripcion').value = '';
-    closeAddModal();
+    // Limpiar campos...
   } catch (error) {
-    alert('Error al guardar el nuevo item');
     console.error(error);
   }
 }
