@@ -1,3 +1,7 @@
+                        let database = [];
+            let manifestAssignments = {};
+            let currentEditingRow = null;
+            
             // Añade al inicio de tu script.js
             const LOADING_TIMEOUT = 10000; // 10 segundos
 
@@ -32,16 +36,16 @@
             // Inicialización con persistencia
             const app = firebase.initializeApp(firebaseConfig);
             const auth = firebase.auth();
+            const db = firebase.firestore();
 
             auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
             .then(() => {
-                auth.onAuthStateChanged(user => {
-                if (!user) {
-                    // Autenticación anónima como respaldo
-                    auth.signInAnonymously()
-                    .catch(error => console.error("Error auth anónima:", error));
-                }
-                });
+                console.log("Persistencia configurada correctamente");
+                initAuthStateListener();
+            })
+            .catch(error => {
+                console.error("Error configurando persistencia:", error);
+                showLoginModal();
             });
             // ================== CONFIGURACIÓN DE PERSISTENCIA ================== //
             auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
@@ -65,6 +69,12 @@
                 showLoginModal();
                 }
             });
+            }
+
+            if (user) {
+            console.log("Usuario detectado:", user.email);
+            document.getElementById('loginModal').style.display = 'none';
+            loadAppData();
             }
 
             function showLoginModal() {
