@@ -253,30 +253,24 @@ async function addItem() {
 async function assignManifest() {
   const manifiesto = document.getElementById('assign-manifiesto').value.trim();
   const ciudad = document.getElementById('assign-ciudad').value;
-
-  // Actualiza TODAS las guías con este manifiesto
-database.forEach(item => {
-  if (item.manifiesto === manifiesto) {
-    item.ciudad = ciudad;
-  }
-});
   
   if (!manifiesto || !ciudad) {
     alert('Complete todos los campos');
     return;
   }
 
-  // Validación adicional
-  if (!/^\d+$/.test(manifiesto)) {
-    alert('El manifiesto debe contener solo números');
+  // Validación modificada para permitir números y guiones
+  if (!/^[\d-]+$/.test(manifiesto)) {
+    alert('El manifiesto debe contener solo números y guiones');
     return;
   }
 
+  // El resto del código permanece igual
   manifestAssignments[manifiesto] = ciudad;
   
-  // Actualiza solo las guías relevantes
+  // Actualiza todas las guías con este manifiesto
   database.forEach(item => {
-    if (item.manifiesto === manifiesto && item.descripcion === "RETENER") {
+    if (item.manifiesto === manifiesto) {
       item.ciudad = ciudad;
     }
   });
