@@ -26,18 +26,20 @@ const db = firebase.firestore();
  * AUTENTICACIÓN CON GOOGLE *
  *****************************/
 function loginWithGoogle() {
-  showLoading();
+  // Usa redirect en lugar de popup
   const provider = new firebase.auth.GoogleAuthProvider();
+  showLoading();
   
-  auth.signInWithPopup(provider)
-    .then((result) => {
-      console.log("Usuario de Google:", result.user.displayName);
-    })
-    .catch((error) => {
-      console.error("Error en login con Google:", error);
-      alert(`Error: ${error.message}`);
-    })
-    .finally(() => hideLoading());
+  auth.signInWithRedirect(provider)
+    .catch(error => {
+      console.error("Error redirección:", error);
+      // Fallback a ventana emergente si redirect falla
+      auth.signInWithPopup(provider)
+        .catch(finalError => {
+          alert("Por favor permite ventanas emergentes para iniciar sesión");
+          console.error("Error final:", finalError);
+        });
+    });
 }
 
 function logoutUser() {
@@ -52,13 +54,19 @@ function logoutUser() {
 
 // Listener de estado de autenticación
 function initAuthStateListener() {
-  auth.onAuthStateChanged((user) => {
+  auth.onAuthStateChanged(user => {
     if (user) {
-      console.log("Usuario autenticado:", user.displayName);
+      // Verifica si es redirección después de login
+      if (auth.isSignInWithEmailLink(window.location.href)) {
+        window.location.href = "/"; // Limpia la URL
+      }
       loadAppData();
     } else {
-      console.log("No autenticado - Redirigiendo a Google");
-      loginWithGoogle(); // Login automático con Google
+      // Solo inicia auto-login en producción, no en localhost
+      if (window.location.hostname !== "localhost" && 
+          window.location.hostname !== "127.0.0.1") {
+        loginWithGoogle();
+      }
     }
   });
 }
@@ -106,12 +114,15 @@ async function saveToFirestore() {
   showLoading();
   try {
     await db.collection("pizarra").doc("datos").set({
-      database,
+      database: database,
       manifest: manifestAssignments
-    });
+    }, { merge: true }); // ¡Agrega merge!
+    console.log("Datos guardados correctamente");
+    return true;
   } catch (error) {
-    console.error("Error guardando datos:", error);
-    throw error;
+    console.error("Error Firestore:", error.code, error.message);
+    alert(`Error al guardar: ${error.message}`);
+    return false;
   } finally {
     hideLoading();
   }
@@ -235,31 +246,33 @@ async function addItem() {
 }
 
 async function assignManifest() {
-  const manifiesto = document.getElementById('assign-manifiesto').value;
+  const manifiesto = document.getElementById('assign-manifiesto').value.trim();
   const ciudad = document.getElementById('assign-ciudad').value;
   
   if (!manifiesto || !ciudad) {
-    alert('Por favor complete todos los campos');
+    alert('Complete todos los campos');
     return;
   }
-  
+
+  // Validación adicional
+  if (!/^\d+$/.test(manifiesto)) {
+    alert('El manifiesto debe contener solo números');
+    return;
+  }
+
   manifestAssignments[manifiesto] = ciudad;
   
+  // Actualiza solo las guías relevantes
   database.forEach(item => {
     if (item.manifiesto === manifiesto && item.descripcion === "RETENER") {
       item.ciudad = ciudad;
     }
   });
   
-  try {
-    await saveToFirestore();
+  if (await saveToFirestore()) {
     loadData();
     document.getElementById('assign-manifiesto').value = '';
-    document.getElementById('assign-ciudad').value = '';
     closeAssignModal();
-  } catch (error) {
-    alert('Error al guardar los cambios');
-    console.error(error);
   }
 }
 
