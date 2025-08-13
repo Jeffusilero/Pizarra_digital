@@ -5,7 +5,7 @@ let database = [];
 let manifestAssignments = {};
 let currentEditingRow = null;
 
-// Configuración de Firebase (REEMPLAZA CON TUS DATOS)
+// Configuración de Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyD7ZJ5qaJ4tsy-lRCifOiRsRS42R9OQKNA",
   authDomain: "pizarra-digital-29922.firebaseapp.com",
@@ -21,19 +21,16 @@ const app = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-
 /*****************************
  * AUTENTICACIÓN CON GOOGLE *
  *****************************/
 function loginWithGoogle() {
-  // Usa redirect en lugar de popup
   const provider = new firebase.auth.GoogleAuthProvider();
   showLoading();
   
   auth.signInWithRedirect(provider)
     .catch(error => {
       console.error("Error redirección:", error);
-      // Fallback a ventana emergente si redirect falla
       auth.signInWithPopup(provider)
         .catch(finalError => {
           alert("Por favor permite ventanas emergentes para iniciar sesión");
@@ -52,17 +49,14 @@ function logoutUser() {
     });
 }
 
-// Listener de estado de autenticación
 function initAuthStateListener() {
   auth.onAuthStateChanged(user => {
     if (user) {
-      // Verifica si es redirección después de login
       if (auth.isSignInWithEmailLink(window.location.href)) {
-        window.location.href = "/"; // Limpia la URL
+        window.location.href = "/";
       }
       loadAppData();
     } else {
-      // Solo inicia auto-login en producción, no en localhost
       if (window.location.hostname !== "localhost" && 
           window.location.hostname !== "127.0.0.1") {
         loginWithGoogle();
@@ -116,7 +110,7 @@ async function saveToFirestore() {
     await db.collection("pizarra").doc("datos").set({
       database: database,
       manifest: manifestAssignments
-    }, { merge: true }); // ¡Agrega merge!
+    }, { merge: true });
     console.log("Datos guardados correctamente");
     return true;
   } catch (error) {
@@ -138,15 +132,16 @@ function loadData() {
   database.forEach(item => {
     const newRow = tableBody.insertRow();
     let descClass = '';
+    const ciudad = item.ciudad || '';
     
-    // Obtener ciudad (combinando manifiesto asignado y ciudad directa)
-    const ciudad = item.ciudad || manifestAssignments[item.manifiesto] || '';
-    
-    if(item.descripcion === "RETENER") {
+    // Solo aplica color si ya está asignado (no cambia automáticamente)
+    if (item.descripcion === "RETENER" && ciudad) {
       descClass = ciudad === "GYE" ? 'retener-amarillo' : 
                  ciudad === "QUT" ? 'retener-naranja' : 'retener';
-    } else if(item.descripcion === "LIBERAR") {
-      descClass = 'liberar';
+    } else if (item.descripcion === "RETENER") {
+      descClass = 'retener'; // Rojo por defecto
+    } else if (item.descripcion === "LIBERAR") {
+      descClass = 'liberar'; // Verde para liberar
     }
     
     newRow.innerHTML = `
@@ -218,33 +213,22 @@ async function addItem() {
     return;
   }
 
-    try {
-    await saveToFirestore();
-    loadData();
-    // Limpiar campos después de agregar
-    document.getElementById('add-guia').value = '';
-    document.getElementById('add-manifiesto').value = '';
-    document.getElementById('add-descripcion').value = '';
-    closeAddModal();
-  } catch (error) {
-    console.error(error);
-  }
-
-  
-  // Busca ciudad asignada al manifiesto (para CUALQUIER descripción)
   const ciudad = manifestAssignments[manifiesto] || '';
   
   database.push({
     guia: guia,
     manifiesto: manifiesto,
     descripcion: descripcion,
-    ciudad: ciudad // Asigna la ciudad si el manifiesto existe
+    ciudad: ciudad
   });
   
   try {
     await saveToFirestore();
     loadData();
-    // Limpiar campos...
+    document.getElementById('add-guia').value = '';
+    document.getElementById('add-manifiesto').value = '';
+    document.getElementById('add-descripcion').value = '';
+    closeAddModal();
   } catch (error) {
     console.error(error);
   }
@@ -259,21 +243,12 @@ async function assignManifest() {
     return;
   }
 
-  // Validación modificada para permitir números y guiones
   if (!/^[\d-]+$/.test(manifiesto)) {
     alert('El manifiesto debe contener solo números y guiones');
     return;
   }
 
-  // El resto del código permanece igual
   manifestAssignments[manifiesto] = ciudad;
-  
-  // Actualiza todas las guías con este manifiesto
-  database.forEach(item => {
-    if (item.manifiesto === manifiesto) {
-      item.ciudad = ciudad;
-    }
-  });
   
   if (await saveToFirestore()) {
     loadData();
@@ -282,9 +257,6 @@ async function assignManifest() {
   }
 }
 
-/*****************************
- * FUNCIONES DE OPERACIONES *
- *****************************/
 async function handleFileImport(fileInput) {
   const file = fileInput.files[0];
   if (!file) return;
@@ -298,7 +270,6 @@ async function handleFileImport(fileInput) {
       const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
       const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
 
-      // Procesar filas desde la 1 (omitir encabezado)
       for (let i = 1; i < jsonData.length; i++) {
         const rowData = jsonData[i];
         if (!rowData || rowData.length < 3) continue;
@@ -309,17 +280,14 @@ async function handleFileImport(fileInput) {
         
         if (!guia || !manifiesto || !descripcion) continue;
 
-        // Obtener ciudad del manifiesto si existe
         let ciudad = '';
         if (descripcion === "RETENER" && manifestAssignments[manifiesto]) {
           ciudad = manifestAssignments[manifiesto];
         }
 
-        // Buscar si la guía ya existe
         const existingIndex = database.findIndex(item => item.guia === guia);
 
         if (existingIndex === -1) {
-          // Guía nueva
           database.push({
             guia,
             manifiesto,
@@ -327,7 +295,6 @@ async function handleFileImport(fileInput) {
             ciudad
           });
         } else {
-          // Actualizar guía existente
           database[existingIndex] = {
             guia,
             manifiesto,
@@ -337,13 +304,6 @@ async function handleFileImport(fileInput) {
         }
       }
 
-      // Actualiza todas las guías RETENER con sus manifiestos asignados
-      database.forEach(item => {
-        if (item.descripcion === "RETENER" && manifestAssignments[item.manifiesto]) {
-          item.ciudad = manifestAssignments[item.manifiesto];
-        }
-      });
-
       await saveToFirestore();
       loadData();
       alert(`Importadas ${jsonData.length - 1} guías correctamente`);
@@ -352,7 +312,7 @@ async function handleFileImport(fileInput) {
       alert("Error al importar. Verifica el formato del Excel.");
     } finally {
       hideLoading();
-      fileInput.value = ''; // Limpia el input de archivo
+      fileInput.value = '';
     }
   };
   reader.readAsArrayBuffer(file);
@@ -504,15 +464,25 @@ async function assignFromRow(button) {
   if (manifestAssignments[manifiesto]) {
     const ciudad = manifestAssignments[manifiesto];
     
-    database.forEach(item => {
-      if (item.manifiesto === manifiesto && item.descripcion === "RETENER") {
-        item.ciudad = ciudad;
-      }
-    });
+    // Actualiza la ciudad en la base de datos
+    const index = database.findIndex(item => item.guia === row.cells[0].textContent);
+    if (index !== -1) {
+      database[index].ciudad = ciudad;
+    }
     
     try {
       await saveToFirestore();
-      loadData();
+      
+      // Cambia el color SOLO al dar clic en "Asignar"
+      const descCell = row.cells[2];
+      if (ciudad === "GYE") {
+        descCell.className = "retener-amarillo";
+      } else if (ciudad === "QUT") {
+        descCell.className = "retener-naranja";
+      }
+      
+      // Actualiza la celda de ciudad
+      row.cells[3].textContent = ciudad;
     } catch (error) {
       console.error(error);
     }
@@ -563,14 +533,12 @@ function filterTable() {
  * EVENT LISTENERS *
  *****************************/
 document.addEventListener('click', function(e) {
-  // Cerrar menús de acción al hacer clic fuera
   if(!e.target.closest('.action-trigger')) {
     document.querySelectorAll('.action-menu').forEach(menu => {
       menu.style.display = 'none';
     });
   }
   
-  // Cerrar modales al hacer clic fuera
   const modals = ['addModal', 'assignModal', 'editModal'];
   modals.forEach(modalId => {
     if (e.target == document.getElementById(modalId)) {
@@ -579,7 +547,6 @@ document.addEventListener('click', function(e) {
   });
 });
 
-// Inicialización al cargar la página
 document.addEventListener('DOMContentLoaded', () => {
   initAuthStateListener();
 });
