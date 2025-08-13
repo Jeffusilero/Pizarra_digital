@@ -276,6 +276,82 @@ async function assignManifest() {
   }
 }
 
+/*****************************
+ * FUNCIONES DE OPERACIONES *
+ *****************************/
+async function handleFileImport(fileInput) {
+  const file = fileInput.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    showLoading();
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+      // Procesar filas desde la 1 (omitir encabezado)
+      for (let i = 1; i < jsonData.length; i++) {
+        const rowData = jsonData[i];
+        if (!rowData || rowData.length < 3) continue;
+
+        const guia = (rowData[0]?.toString() || '').trim();
+        const manifiesto = (rowData[1]?.toString() || '').trim();
+        const descripcion = (rowData[2]?.toString() || '').trim().toUpperCase();
+        
+        if (!guia || !manifiesto || !descripcion) continue;
+
+        // Obtener ciudad del manifiesto si existe
+        let ciudad = '';
+        if (descripcion === "RETENER" && manifestAssignments[manifiesto]) {
+          ciudad = manifestAssignments[manifiesto];
+        }
+
+        // Buscar si la guía ya existe
+        const existingIndex = database.findIndex(item => item.guia === guia);
+
+        if (existingIndex === -1) {
+          // Guía nueva
+          database.push({
+            guia,
+            manifiesto,
+            descripcion,
+            ciudad
+          });
+        } else {
+          // Actualizar guía existente
+          database[existingIndex] = {
+            guia,
+            manifiesto,
+            descripcion,
+            ciudad: ciudad || database[existingIndex].ciudad || ''
+          };
+        }
+      }
+
+      // Actualiza todas las guías RETENER con sus manifiestos asignados
+      database.forEach(item => {
+        if (item.descripcion === "RETENER" && manifestAssignments[item.manifiesto]) {
+          item.ciudad = manifestAssignments[item.manifiesto];
+        }
+      });
+
+      await saveToFirestore();
+      loadData();
+      alert(`Importadas ${jsonData.length - 1} guías correctamente`);
+    } catch (error) {
+      console.error("Error en importación:", error);
+      alert("Error al importar. Verifica el formato del Excel.");
+    } finally {
+      hideLoading();
+      fileInput.value = ''; // Limpia el input de archivo
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
 async function deleteItem(button) {
   if (!confirm('¿Está seguro que desea eliminar este item?')) return;
   
