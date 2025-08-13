@@ -1,4 +1,23 @@
-         
+            // Añade al inicio de tu script.js
+            const LOADING_TIMEOUT = 10000; // 10 segundos
+
+            // Modifica tu función de carga
+            function handleAppLoad() {
+            showLoading();
+            
+            // Timeout de seguridad
+            const timeoutId = setTimeout(() => {
+                hideLoading();
+                showLoginModal();
+                console.error("Tiempo de carga excedido");
+            }, LOADING_TIMEOUT);
+
+            // Tu lógica de autenticación
+            auth.setPersistence(/* ... */)
+                .then(/* ... */)
+                .finally(() => clearTimeout(timeoutId));
+            }
+
             // Configuración de Firebase
             const firebaseConfig = {
             apiKey: "AIzaSyD7ZJ5qaJ4tsy-1RG1f01RsRS42R900NAA",
@@ -24,41 +43,73 @@
                 }
                 });
             });
-
-            // Configuración de persistencia de sesión
+            // ================== CONFIGURACIÓN DE PERSISTENCIA ================== //
             auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-            .catch(error => console.error("Error en persistencia:", error));
+            .then(() => {
+                console.log("Persistencia configurada correctamente");
+                initAuthStateListener();
+            })
+            .catch(error => {
+                console.error("Error configurando persistencia:", error);
+                showLoginModal();
+            });
 
-            // Variables globales
-            let database = [];
-            let manifestAssignments = {};
-            let currentEditingRow = null;
+            // ================== FUNCIONES DE AUTENTICACIÓN MEJORADAS ================== //
+            function initAuthStateListener() {
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                console.log("Usuario detectado:", user.email);
+                loadAppData();
+                } else {
+                console.log("No hay usuario autenticado");
+                showLoginModal();
+                }
+            });
+            }
 
-            // ================== FUNCIONES DE AUTENTICACIÓN ================== //
             function showLoginModal() {
-            document.getElementById('loginModal').style.display = 'block';
+            // Asegúrate que tu modal tenga este ID en HTML
+            const loginModal = document.getElementById('loginModal');
+            if (loginModal) {
+                loginModal.style.display = 'block';
+            } else {
+                console.error("Modal de login no encontrado");
+            }
             }
 
             async function loginUser() {
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
             
+            if (!email || !password) {
+                alert("Por favor ingrese correo y contraseña");
+                return;
+            }
+
             showLoading();
             try {
                 await auth.signInWithEmailAndPassword(email, password);
-                document.getElementById('loginModal').style.display = 'none';
-                loadAppData(); // Cargar datos después de autenticar
+                // No ocultes el modal aquí, se manejará en el authStateChanged
             } catch (error) {
-                alert(`Error de autenticación: ${error.message}`);
+                const errorMessage = error.code === 'auth/user-not-found' 
+                ? "Usuario no registrado" 
+                : error.message;
+                alert(`Error de autenticación: ${errorMessage}`);
             } finally {
                 hideLoading();
             }
             }
 
             function logoutUser() {
+            showLoading();
             auth.signOut()
-                .then(() => window.location.reload())
-                .catch(error => alert(`Error al cerrar sesión: ${error.message}`));
+                .then(() => {
+                window.location.reload();
+                })
+                .catch(error => {
+                console.error("Error al cerrar sesión:", error);
+                hideLoading();
+                });
             }
 
             // ================== FUNCIONES PRINCIPALES ================== //
