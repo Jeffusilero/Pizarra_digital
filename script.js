@@ -147,28 +147,26 @@ function loadData() {
     const newRow = tableBody.insertRow();
     let descClass = '';
     let ciudadClass = '';
+    let ciudadValue = item.ciudad || ''; // Asegura que siempre haya un valor para ciudad
     
     if(item.descripcion === "RETENER") {
-      // Descripción siempre en rojo
       descClass = 'retener';
-      // Ciudad solo muestra color si está asignada
-      ciudadClass = item.ciudad ? (item.ciudad === "GYE" ? 'retener-amarillo' : 'retener-naranja') : '';
+      // Ciudad solo muestra color si está asignada explícitamente
+      ciudadClass = item.ciudad && item.ciudad !== '' ? 
+                  (item.ciudad === "GYE" ? 'retener-amarillo' : 'retener-naranja') : '';
     } 
     else if(item.descripcion === "LIBERAR") {
-      // Para LIBERAR, ambos en verde y mostrar ciudad siempre
       descClass = 'liberar';
       ciudadClass = 'liberar';
-    } else {
-      // Para otros estados (EDITAR...)
-      descClass = '';
-      ciudadClass = '';
+      // Mostrar ciudad aunque esté vacía (pero con fondo verde)
+      ciudadValue = item.ciudad || '';
     }
     
     newRow.innerHTML = `
       <td>${item.guia}</td>
       <td>${item.manifiesto}</td>
       <td class="${descClass}">${item.descripcion}</td>
-      <td class="${ciudadClass}">${item.ciudad || ''}</td>
+      <td class="${ciudadClass}">${ciudadValue}</td>
       <td>${generateActionButtons(item.descripcion)}</td>
     `;
   });
@@ -394,9 +392,13 @@ async function liberarFromRow(button) {
   
   const index = database.findIndex(item => item.guia === guia);
   if(index !== -1) {
-    database[index].descripcion = "LIBERAR";
-    // No borramos la ciudad, solo cambiamos el estado
-    // database[index].ciudad = ''; // <-- Esta línea debe ELIMINARSE
+    // Conservamos la ciudad existente al liberar
+    const ciudadActual = database[index].ciudad;
+    database[index] = {
+      ...database[index],
+      descripcion: "LIBERAR",
+      ciudad: ciudadActual // Mantenemos la ciudad que ya tenía
+    };
     
     try {
       await saveToFirestore();
