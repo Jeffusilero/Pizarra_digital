@@ -150,15 +150,16 @@ function loadData() {
     let ciudadValue = item.ciudad || ''; // Asegura que siempre haya un valor para ciudad
     
     if(item.descripcion === "RETENER") {
-      // Descripción en rojo si no está asignada, o color correspondiente si está asignada
-      descClass = item.ciudad ? (item.ciudad === "GYE" ? 'retener-amarillo' : 'retener-naranja') : 'retener';
-      // Ciudad solo muestra color si está asignada
-      ciudadClass = item.ciudad ? descClass : '';
-    }
+      // Descripción siempre en rojo inicialmente
+      descClass = 'retener';
+      // Ciudad solo muestra color si está asignada explícitamente
+      ciudadClass = item.ciudad && item.ciudad.trim() !== '' ? 
+                   (item.ciudad === "GYE" ? 'retener-amarillo' : 'retener-naranja') : '';
+    } 
     else if(item.descripcion === "LIBERAR") {
+      // Para LIBERAR, ambos en verde y mostrar ciudad siempre
       descClass = 'liberar';
       ciudadClass = 'liberar';
-      // Mostrar ciudad aunque esté vacía (pero con fondo verde)
       ciudadValue = item.ciudad || '';
     }
     
@@ -228,7 +229,6 @@ async function assignFromRow(button) {
   
   if (manifestAssignments[manifiesto]) {
     const ciudad = manifestAssignments[manifiesto];
-    const colorClass = ciudad === "GYE" ? 'retener-amarillo' : 'retener-naranja';
     
     const index = database.findIndex(item => item.guia === guia);
     if (index !== -1) {
@@ -300,7 +300,10 @@ async function addItem() {
   try {
     await saveToFirestore();
     loadData();
-    // Limpiar formulario...
+    document.getElementById('add-guia').value = '';
+    document.getElementById('add-manifiesto').value = '';
+    document.getElementById('add-descripcion').value = '';
+    closeAddModal();
   } catch (error) {
     console.error(error);
   }
@@ -329,11 +332,8 @@ async function handleFileImport(fileInput) {
         
         if (!guia || !manifiesto || !descripcion) continue;
 
-        // Obtener ciudad del manifiesto si existe y es RETENER
-        let ciudad = '';
-        if (descripcion === "RETENER" && manifestAssignments[manifiesto]) {
-          ciudad = manifestAssignments[manifiesto];
-        }
+        // Ciudad siempre vacía al importar para RETENER
+        const ciudad = descripcion === "RETENER" ? '' : (database.find(item => item.guia === guia)?.ciudad || '');
 
         const existingIndex = database.findIndex(item => item.guia === guia);
 
