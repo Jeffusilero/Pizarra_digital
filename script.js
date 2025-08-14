@@ -149,14 +149,15 @@ function loadData() {
     let ciudadClass = '';
     
     if(item.descripcion === "RETENER") {
-      // Ciudad en blanco hasta ser asignada
-      ciudadClass = item.ciudad ? (item.ciudad === "GYE" ? 'retener-amarillo' : 'retener-naranja') : '';
-      // Descripción RETENER cambia de color solo cuando está asignada
-      descClass = item.ciudad ? ciudadClass : 'retener';
+      // Descripción RETENER comienza en rojo, cambia al color de ciudad cuando está asignada
+      descClass = item.ciudad ? (item.ciudad === "GYE" ? 'retener-amarillo' : 'retener-naranja') : 'retener';
+      // Ciudad comienza en blanco, toma color solo cuando está asignada
+      ciudadClass = item.ciudad ? descClass : '';
     } 
     else if(item.descripcion === "LIBERAR") {
+      // Para LIBERAR, ambas celdas (descripción y ciudad) en verde
       descClass = 'liberar';
-      ciudadClass = 'liberar'; // Ciudad también en verde
+      ciudadClass = 'liberar';
     }
     
     newRow.innerHTML = `

@@ -46,24 +46,25 @@ td {
   color: black;
 }
 
-/* Estilos para RETENER */
+/* Estilos para RETENER (rojo) */
 .retener {
   background-color: #ff4444 !important;
   color: white !important;
 }
 
-/* Estilos para ciudad cuando es RETENER */
+/* Estilos para GYE (amarillo) - aplica a descripción y ciudad */
 .retener-amarillo {
   background-color: #eeff00 !important;
   color: black !important;
 }
 
+/* Estilos para QUT (naranja) - aplica a descripción y ciudad */
 .retener-naranja {
   background-color: #ff8800 !important;
   color: black !important;
 }
 
-/* Estilos para LIBERAR */
+/* Estilos para LIBERAR (verde) - aplica a descripción y ciudad */
 .liberar {
   background-color: #00C851 !important;
   color: white !important;
