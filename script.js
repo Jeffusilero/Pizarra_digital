@@ -149,13 +149,20 @@ function loadData() {
     let ciudadClass = '';
     
     if(item.descripcion === "RETENER") {
-      // Descripción siempre en rojo para RETENER
+      // Descripción siempre en rojo inicialmente
       descClass = 'retener';
-      // Ciudad solo muestra color cuando está asignada
-      ciudadClass = item.ciudad ? (item.ciudad === "GYE" ? 'retener-amarillo' : 'retener-naranja') : '';
+      // Ciudad en blanco inicialmente
+      ciudadClass = '';
+      
+      // Si tiene ciudad asignada, aplicar color a ambos
+      if(item.ciudad) {
+        const colorClass = item.ciudad === "GYE" ? 'retener-amarillo' : 'retener-naranja';
+        descClass = colorClass;
+        ciudadClass = colorClass;
+      }
     } 
     else if(item.descripcion === "LIBERAR") {
-      // Para LIBERAR, ambas celdas en verde
+      // Para LIBERAR, ambos en verde y mostrar ciudad
       descClass = 'liberar';
       ciudadClass = 'liberar';
     }
@@ -164,7 +171,7 @@ function loadData() {
       <td>${item.guia}</td>
       <td>${item.manifiesto}</td>
       <td class="${descClass}">${item.descripcion}</td>
-      <td class="${ciudadClass}">${item.ciudad}</td>
+      <td class="${ciudadClass}">${item.ciudad || ''}</td>
       <td>${generateActionButtons(item.descripcion)}</td>
     `;
   });
