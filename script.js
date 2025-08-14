@@ -52,18 +52,50 @@ function logoutUser() {
 function initAuthStateListener() {
   auth.onAuthStateChanged(user => {
     if (user) {
-      if (auth.isSignInWithEmailLink(window.location.href)) {
-        window.location.href = "/";
-      }
+      console.log("Usuario autenticado:", user.email);
       loadAppData();
     } else {
-      if (window.location.hostname !== "localhost" && 
-          window.location.hostname !== "127.0.0.1") {
-        loginWithGoogle();
+      console.log("Usuario no autenticado");
+      // Mostrar un botón de login en lugar de redireccionar automáticamente
+      if (!document.getElementById('loginBtn')) {
+        const loginBtn = document.createElement('button');
+        loginBtn.id = 'loginBtn';
+        loginBtn.textContent = 'Iniciar sesión con Google';
+        loginBtn.className = 'google-login-btn';
+        loginBtn.onclick = loginWithGoogle;
+        
+        const container = document.querySelector('.container');
+        if (container) {
+          container.innerHTML = '';
+          container.appendChild(loginBtn);
+        }
       }
     }
   });
 }
+
+// Agregar estilos para el botón de Google
+const style = document.createElement('style');
+style.textContent = `
+  .google-login-btn {
+    padding: 12px 24px;
+    background-color: #4285F4;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin: 20% auto;
+  }
+  .google-login-btn:hover {
+    background-color: #3367D6;
+  }
+`;
+document.head.appendChild(style);
 
 /*****************************
  * FUNCIONES PRINCIPALES *
@@ -125,6 +157,7 @@ async function saveToFirestore() {
 /*****************************
  * FUNCIONES DE INTERFAZ *
  *****************************/
+// Modificar la función loadData para mantener los colores correctamente
 function loadData() {
   const tableBody = document.getElementById('pizarra-table').getElementsByTagName('tbody')[0];
   tableBody.innerHTML = '';
@@ -137,11 +170,17 @@ function loadData() {
     // Obtener ciudad para TODOS los items
     const ciudad = manifestAssignments[item.manifiesto] || item.ciudad || '';
     
-    // Aplicar estilos solo a RETENER y LIBERAR
+    // Aplicar estilos basados en el estado guardado
     if(item.descripcion === "RETENER") {
-      descClass = 'retener'; // Rojo por defecto
-      // Ciudad solo tendrá color si se ha asignado explícitamente
-      ciudadClass = item.ciudad ? (item.ciudad === "GYE" ? 'retener-amarillo' : 'retener-naranja') : '';
+      if(ciudad === "GYE") {
+        descClass = 'retener-amarillo';
+        ciudadClass = 'retener-amarillo';
+      } else if(ciudad === "QUT") {
+        descClass = 'retener-naranja';
+        ciudadClass = 'retener-naranja';
+      } else {
+        descClass = 'retener';
+      }
     } else if(item.descripcion === "LIBERAR") {
       descClass = 'liberar';
       ciudadClass = 'liberar';
@@ -283,20 +322,19 @@ async function addItem() {
     return;
   }
 
-  // Solo asignar ciudad si es RETENER y el manifiesto está asignado
-  const ciudad = descripcion === "RETENER" ? (manifestAssignments[manifiesto] || '') : '';
+  // Ciudad solo se asigna si es RETENER y el manifiesto está asignado
+  const ciudad = (descripcion === "RETENER" && manifestAssignments[manifiesto]) ? manifestAssignments[manifiesto] : '';
   
   database.push({
     guia: guia,
     manifiesto: manifiesto,
     descripcion: descripcion,
-    ciudad: ciudad
+    ciudad: ciudad // Esto ahora puede estar vacío incluso para RETENER
   });
   
   try {
     await saveToFirestore();
     loadData();
-    // Limpiar campos
     document.getElementById('add-guia').value = '';
     document.getElementById('add-manifiesto').value = '';
     document.getElementById('add-descripcion').value = '';
@@ -411,71 +449,25 @@ async function saveChanges() {
     return;
   }
   
+  // Actualizar la fila en la interfaz
   currentEditingRow.cells[0].textContent = guia;
   currentEditingRow.cells[1].textContent = manifiesto;
   currentEditingRow.cells[2].textContent = descripcion;
   
-  if (descripcion === "RETENER") {
-    const ciudad = currentEditingRow.cells[3].textContent;
-    if(ciudad === "GYE") {
-      currentEditingRow.cells[2].className = 'retener-amarillo';
-      currentEditingRow.cells[3].className = 'retener-amarillo';
-    } else if(ciudad === "QUT") {
-      currentEditingRow.cells[2].className = 'retener-naranja';
-      currentEditingRow.cells[3].className = 'retener-naranja';
-    } else {
-      currentEditingRow.cells[2].className = 'retener';
-      currentEditingRow.cells[3].className = '';
-    }
-    
-    const actionCell = currentEditingRow.cells[4];
-    actionCell.innerHTML = `
-      <div class="action-buttons">
-        <div class="action-trigger">
-          <button class="btn-action btn-blue" onclick="toggleActionMenu(this)">Acción</button>
-          <div class="action-menu">
-            <div class="action-buttons">
-              <button class="btn-action btn-light-blue" onclick="assignFromRow(this)">Asignar</button>
-              <button class="btn-action btn-green" onclick="liberarFromRow(this)">Liberar</button>
-            </div>
-          </div>
-        </div>
-        <button class="btn-action btn-gray" onclick="deleteItem(this)">Eliminar</button>
-      </div>
-    `;
-  } else if (descripcion === "LIBERAR") {
-    currentEditingRow.cells[2].className = 'liberar';
-    currentEditingRow.cells[3].className = 'liberar';
-    currentEditingRow.cells[3].textContent = '';
-    
-    const actionCell = currentEditingRow.cells[4];
-    actionCell.innerHTML = `
-      <div class="action-buttons">
-        <button class="btn-action btn-gray" onclick="deleteItem(this)">Eliminar</button>
-      </div>
-    `;
-  } else {
-    currentEditingRow.cells[2].className = '';
-    currentEditingRow.cells[3].className = '';
-    currentEditingRow.cells[3].textContent = '';
-    
-    const actionCell = currentEditingRow.cells[4];
-    actionCell.innerHTML = `
-      <div class="action-buttons">
-        <button class="btn-action btn-gray" onclick="deleteItem(this)">Eliminar</button>
-      </div>
-    `;
-  }
-  
+  // Actualizar en la base de datos
   const index = database.findIndex(item => item.guia === currentEditingRow.cells[0].textContent);
   if(index !== -1) {
+    const ciudad = (descripcion === "RETENER" && manifestAssignments[manifiesto]) ? manifestAssignments[manifiesto] : '';
+    
     database[index] = {
       guia: guia,
       manifiesto: manifiesto,
       descripcion: descripcion,
-      ciudad: currentEditingRow.cells[3].textContent || ''
+      ciudad: ciudad
     };
+    
     await saveToFirestore();
+    loadData(); // Recargar los datos para asegurar consistencia
   }
   
   closeEditModal();
