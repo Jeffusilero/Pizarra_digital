@@ -147,19 +147,20 @@ function loadData() {
     const newRow = tableBody.insertRow();
     let descClass = '';
     let ciudadClass = '';
-    let ciudadValue = item.ciudad || ''; // Mostrar ciudad aunque esté vacía
+    
+    // Mostrar siempre el valor de la ciudad (aunque esté vacío)
+    const ciudadValue = item.ciudad || ''; 
     
     if(item.descripcion === "RETENER") {
       // Descripción SIEMPRE en rojo
       descClass = 'retener';
       
-      // Ciudad CON TEXTO pero SIN COLOR (fondo blanco)
-      ciudadClass = ''; // Sin clase = fondo blanco
+      // Ciudad siempre visible pero con fondo blanco inicialmente
+      ciudadClass = '';
       
-      // Solo aplicar color si está asignada (al dar clic en "Asignar")
+      // Solo aplicar color si está asignada explícitamente
       if(item.ciudad && item.ciudad.trim() !== '') {
         ciudadClass = item.ciudad === "GYE" ? 'retener-amarillo' : 'retener-naranja';
-        // La descripción sigue en rojo (no cambia)
       }
     }
     else if(item.descripcion === "LIBERAR") {
@@ -293,23 +294,29 @@ async function addItem() {
     return;
   }
 
-  // Ciudad siempre vacía al agregar, incluso si el manifiesto tiene asignación
+  // Agregar el nuevo item
   database.push({
     guia: guia,
     manifiesto: manifiesto,
     descripcion: descripcion,
-    ciudad: '' // Fuerza ciudad vacía sin importar la asignación del manifiesto
+    ciudad: '' // Ciudad vacía inicialmente
   });
   
   try {
     await saveToFirestore();
     loadData();
+    
+    // Limpiar campos del modal
     document.getElementById('add-guia').value = '';
     document.getElementById('add-manifiesto').value = '';
     document.getElementById('add-descripcion').value = '';
+    
+    // Cerrar el modal
     closeAddModal();
+    
   } catch (error) {
-    console.error(error);
+    console.error("Error al agregar:", error);
+    alert("Error al agregar el item. Intente nuevamente.");
   }
 }
 

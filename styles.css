@@ -44,6 +44,8 @@ th {
 td {
   background-color: white;
   color: black;
+  white-space: nowrap; /* Evita que el texto se oculte */
+  overflow: visible;   /* Permite que el texto sea visible */
 }
 
 /* RETENER (descripción) */
