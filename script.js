@@ -138,7 +138,7 @@ async function saveToFirestore() {
 
 /*****************************
  * FUNCIONES DE INTERFAZ *
- *****************************/
+ *****************************/ 
 function loadData() {
   const tableBody = document.getElementById('pizarra-table').getElementsByTagName('tbody')[0];
   tableBody.innerHTML = '';
