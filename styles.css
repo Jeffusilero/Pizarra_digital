@@ -12,7 +12,32 @@ body {
 .container {
   width: 70%;
   max-width: 1200px;
-  display: none; /* Oculto hasta autenticación */
+  display: none; /* Oculto inicialmente hasta autenticación */
+}
+
+h2 {
+  color: #333;
+  text-align: center;
+  font-size: 1.5em;
+  margin-bottom: 20px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  font-size: 0.9em;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 4px;
+  text-align: center;
+}
+
+th {
+  background-color: #b3b1b1;
+  font-weight: bold;
 }
 
 /* Estilos para celdas */
@@ -21,32 +46,245 @@ td {
   color: black;
 }
 
-/* RETENER - Rojo por defecto */
+/* RETENER - Rojo por defecto solo en descripción */
 .retener {
   background-color: #ff4444 !important;
   color: white !important;
 }
 
-/* RETENER asignado a GYE - Amarillo */
+/* RETENER asignado a GYE - Amarillo en ambos campos */
 .retener-amarillo {
   background-color: #eeff00 !important;
   color: black !important;
 }
 
-/* RETENER asignado a QUT - Naranja */
+/* RETENER asignado a QUT - Naranja en ambos campos */
 .retener-naranja {
   background-color: #ff8800 !important;
   color: black !important;
 }
 
-/* LIBERAR - Verde en ambos campos */
+/* LIBERAR - Verde en ambos campos, ciudad vacía */
 .liberar {
   background-color: #00C851 !important;
   color: white !important;
 }
 
-/* Resto de estilos permanecen igual... */
-/* (th, action-buttons, btn-action, add-section, modal, etc.) */
+/* Botones de acción */
+.action-buttons {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-action {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  color: white;
+}
+
+.btn-blue {
+  background-color: #4285f4;
+}
+
+.btn-light-blue {
+  background-color: #5bc0de;
+}
+
+.btn-green {
+  background-color: #00C851;
+}
+
+.btn-gray {
+  background-color: #aaaaaa;
+}
+
+/* Sección de agregar */
+.add-section {
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.add-btn {
+  background-color: #4285f4;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+.assign-btn {
+  background-color: #5bc0de;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+.import-btn {
+  background-color: #34a853;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+.file-input {
+  display: none;
+}
+
+/* Modales */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 5% auto;
+  padding: 15px;
+  border: 1px solid #888;
+  width: 60%;
+  max-width: 300px;
+  border-radius: 5px;
+  font-size: 0.9em;
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close:hover {
+  color: black;
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-form input, .modal-form select {
+  padding: 6px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+.modal-btn {
+  background-color: #4285f4;
+  color: white;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  margin-top: 8px;
+  font-size: 0.9em;
+}
+
+/* Buscador */
+.search-container {
+  width: 100%;
+  margin: 0 auto 15px auto;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+}
+
+.search-input {
+  width: 25%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9em;
+  text-align: center;
+}
+
+.item-counter {
+  font-weight: bold;
+}
+
+/* Menú de acciones */
+.action-menu {
+  display: none;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 5px;
+  position: absolute;
+  z-index: 10;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.action-menu .action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.action-trigger {
+  position: relative;
+  display: inline-block;
+}
+
+/* Loading */
+#loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.loading-content {
+  background: white;
+  padding: 30px;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
+  min-width: 200px;
+}
+
+.loading-content p {
+  font-size: 1.2em;
+  color: #333;
+  margin-top: 15px;
+}
 
 /* Botón de Google */
 .google-login-btn {
@@ -62,8 +300,34 @@ td {
   justify-content: center;
   gap: 10px;
   margin: 20px auto;
+  transition: background-color 0.3s;
 }
 
 .google-login-btn:hover {
   background-color: #3367D6;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container {
+    width: 95%;
+  }
+  
+  .search-input {
+    width: 50%;
+  }
+  
+  .add-section {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  table {
+    font-size: 0.8em;
+  }
+  
+  .btn-action {
+    padding: 6px 10px;
+    font-size: 0.8em;
+  }
 }
