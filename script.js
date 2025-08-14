@@ -226,7 +226,7 @@ async function addItem() {
   
   try {
     await saveToFirestore();
-    loadData();
+    loadData(); // Esto mostrará RETENER en rojo por defecto
     document.getElementById('add-guia').value = '';
     document.getElementById('add-manifiesto').value = '';
     document.getElementById('add-descripcion').value = '';
