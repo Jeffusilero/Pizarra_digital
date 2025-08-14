@@ -281,32 +281,32 @@ th {
 /* Estilos base para celdas */
 td {
   background-color: white;
+  color: black;
 }
 
 /* Estilos para RETENER */
 .retener {
   background-color: #ff4444 !important;
-  color: white;
+  color: white !important;
 }
 
 .retener-amarillo {
   background-color: #eeff00 !important;
-  color: black;
+  color: black !important;
 }
 
 .retener-naranja {
   background-color: #ff8800 !important;
-  color: black;
+  color: black !important;
 }
 
 /* Estilos para LIBERAR */
 .liberar {
   background-color: #00C851 !important;
-  color: white;
+  color: white !important;
 }
 
 /* Estilos para celdas de ciudad */
-td.retener,
 td.retener-amarillo,
 td.retener-naranja,
 td.liberar {
