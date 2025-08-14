@@ -52,6 +52,7 @@ td {
   color: white !important;
 }
 
+/* Estilos para ciudad cuando es RETENER */
 .retener-amarillo {
   background-color: #eeff00 !important;
   color: black !important;

@@ -148,29 +148,26 @@ function loadData() {
     let descClass = '';
     let ciudadClass = '';
     
-    // Obtener ciudad para TODOS los items
-    const ciudad = item.ciudad || '';
-    
-    // Aplicar estilos basados en el estado guardado
+    // Aplicar estilos basados en la descripción
     if(item.descripcion === "RETENER") {
-      descClass = 'retener'; // Rojo por defecto
+      descClass = 'retener'; // Rojo solo para descripción
       
-      // Solo aplicar color a ciudad si ya está asignada
-      if(ciudad === "GYE") {
+      // Aplicar color a ciudad solo si está asignada
+      if(item.ciudad === "GYE") {
         ciudadClass = 'retener-amarillo';
-      } else if(ciudad === "QUT") {
+      } else if(item.ciudad === "QUT") {
         ciudadClass = 'retener-naranja';
       }
     } else if(item.descripcion === "LIBERAR") {
-      descClass = 'liberar';
-      ciudadClass = '';
+      descClass = 'liberar'; // Verde para descripción
+      ciudadClass = ''; // Sin color especial para ciudad
     }
     
     newRow.innerHTML = `
       <td>${item.guia}</td>
       <td>${item.manifiesto}</td>
       <td class="${descClass}">${item.descripcion}</td>
-      <td class="${ciudadClass}">${ciudad}</td>
+      <td class="${ciudadClass}">${item.ciudad}</td>
       <td>${generateActionButtons(item.descripcion)}</td>
     `;
   });
