@@ -132,15 +132,15 @@ function loadData() {
   database.forEach(item => {
     const newRow = tableBody.insertRow();
     let descClass = '';
-    let ciudadClass = ''; // Nueva variable para clase de ciudad
+    let ciudadClass = '';
     
-    // Obtener ciudad (mostrar para TODAS las descripciones)
-    const ciudad = item.ciudad || '';
+    // Obtener ciudad (para TODAS las descripciones)
+    const ciudad = item.ciudad || manifestAssignments[item.manifiesto] || '';
     
+    // Aplicar clases solo a RETENER y LIBERAR
     if(item.descripcion === "RETENER") {
-      // Rojo por defecto (el color cambiará solo al hacer clic en Asignar)
-      descClass = 'retener';
-      ciudadClass = 'retener'; // Mismo color que descripción
+      descClass = 'retener'; // Rojo por defecto
+      ciudadClass = 'retener';
     } else if(item.descripcion === "LIBERAR") {
       descClass = 'liberar';
       ciudadClass = 'liberar';
@@ -205,35 +205,44 @@ function closeEditModal() {
 /*****************************
  * FUNCIONES DE OPERACIONES *
  *****************************/
-async function addItem() {
-  const guia = document.getElementById('add-guia').value;
-  const manifiesto = document.getElementById('add-manifiesto').value;
-  const descripcion = document.getElementById('add-descripcion').value;
+async function assignFromRow(button) {
+  const row = button.closest('tr');
+  const manifiesto = row.cells[1].textContent;
+  const guia = row.cells[0].textContent;
   
-  if (!guia || !manifiesto || !descripcion) {
-    alert('Por favor complete los campos obligatorios');
-    return;
+  if (manifestAssignments[manifiesto]) {
+    const ciudad = manifestAssignments[manifiesto];
+    
+    // Actualizar en la base de datos
+    const index = database.findIndex(item => item.guia === guia);
+    if (index !== -1) {
+      database[index].ciudad = ciudad;
+      
+      try {
+        await saveToFirestore();
+        
+        // Cambiar colores SOLO al hacer clic en Asignar
+        const descCell = row.cells[2];
+        const ciudadCell = row.cells[3];
+        
+        if (ciudad === "GYE") {
+          descCell.className = "retener-amarillo";
+          ciudadCell.className = "retener-amarillo";
+        } else if (ciudad === "QUT") {
+          descCell.className = "retener-naranja";
+          ciudadCell.className = "retener-naranja";
+        }
+        
+        ciudadCell.textContent = ciudad;
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  } else {
+    alert('Este manifiesto no tiene ciudad asignada. Use "Asignar Manifiesto" primero.');
   }
-
-  const ciudad = manifestAssignments[manifiesto] || '';
   
-  database.push({
-    guia: guia,
-    manifiesto: manifiesto,
-    descripcion: descripcion,
-    ciudad: ciudad
-  });
-  
-  try {
-    await saveToFirestore();
-    loadData(); // Esto mostrará RETENER en rojo por defecto
-    document.getElementById('add-guia').value = '';
-    document.getElementById('add-manifiesto').value = '';
-    document.getElementById('add-descripcion').value = '';
-    closeAddModal();
-  } catch (error) {
-    console.error(error);
-  }
+  toggleActionMenu(button.closest('.action-trigger').querySelector('button'));
 }
 
 async function assignManifest() {
@@ -245,12 +254,14 @@ async function assignManifest() {
     return;
   }
 
-  if (!/^[\d-]+$/.test(manifiesto)) {
-    alert('El manifiesto debe contener solo números y guiones');
-    return;
-  }
-
   manifestAssignments[manifiesto] = ciudad;
+  
+  // Actualizar ciudad en guías existentes (sin cambiar colores)
+  database.forEach(item => {
+    if (item.manifiesto === manifiesto) {
+      item.ciudad = ciudad;
+    }
+  });
   
   if (await saveToFirestore()) {
     loadData();

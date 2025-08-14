@@ -278,23 +278,37 @@ th {
   margin-top: 15px;
 }
 
-/* Estilos para celdas de ciudad */
-td.retener {
+/* Estilos base para celdas */
+td {
+  background-color: white;
+}
+
+/* Estilos para RETENER */
+.retener {
   background-color: #ff4444 !important;
   color: white;
 }
 
-td.retener-amarillo {
+.retener-amarillo {
   background-color: #eeff00 !important;
   color: black;
 }
 
-td.retener-naranja {
+.retener-naranja {
   background-color: #ff8800 !important;
   color: black;
 }
 
-td.liberar {
+/* Estilos para LIBERAR */
+.liberar {
   background-color: #00C851 !important;
   color: white;
+}
+
+/* Estilos para celdas de ciudad */
+td.retener,
+td.retener-amarillo,
+td.retener-naranja,
+td.liberar {
+  font-weight: bold;
 }
