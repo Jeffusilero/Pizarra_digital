@@ -46,25 +46,23 @@ td {
   color: black;
 }
 
-/* RETENER - Rojo por defecto solo en descripción */
+/* Estilos para RETENER */
 .retener {
   background-color: #ff4444 !important;
   color: white !important;
 }
 
-/* RETENER asignado a GYE - Amarillo en ambos campos */
 .retener-amarillo {
   background-color: #eeff00 !important;
   color: black !important;
 }
 
-/* RETENER asignado a QUT - Naranja en ambos campos */
 .retener-naranja {
   background-color: #ff8800 !important;
   color: black !important;
 }
 
-/* LIBERAR - Verde en ambos campos, ciudad vacía */
+/* Estilos para LIBERAR */
 .liberar {
   background-color: #00C851 !important;
   color: white !important;
@@ -84,23 +82,26 @@ td {
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.9em;
-  color: white;
 }
 
 .btn-blue {
   background-color: #4285f4;
+  color: white;
 }
 
 .btn-light-blue {
   background-color: #5bc0de;
+  color: white;
 }
 
 .btn-green {
   background-color: #00C851;
+  color: white;
 }
 
 .btn-gray {
   background-color: #aaaaaa;
+  color: white;
 }
 
 /* Sección de agregar */
@@ -243,7 +244,6 @@ td {
   padding: 5px;
   position: absolute;
   z-index: 10;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
 .action-menu .action-buttons {
@@ -300,34 +300,8 @@ td {
   justify-content: center;
   gap: 10px;
   margin: 20px auto;
-  transition: background-color 0.3s;
 }
 
 .google-login-btn:hover {
   background-color: #3367D6;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .container {
-    width: 95%;
-  }
-  
-  .search-input {
-    width: 50%;
-  }
-  
-  .add-section {
-    flex-direction: column;
-    gap: 8px;
-  }
-  
-  table {
-    font-size: 0.8em;
-  }
-  
-  .btn-action {
-    padding: 6px 10px;
-    font-size: 0.8em;
-  }
 }
