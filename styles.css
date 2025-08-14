@@ -40,25 +40,25 @@ th {
   font-weight: bold;
 }
 
-/* Estilos para celdas */
+/* Celda normal (fondo blanco) */
 td {
   background-color: white;
   color: black;
 }
 
-/* RETENER - Rojo por defecto */
+/* RETENER (descripción) */
 .retener {
   background-color: #ff4444 !important;
   color: white !important;
 }
 
-/* GYE - Amarillo (aplica a ambos cuando está asignado) */
+/* Asignado a GYE */
 .retener-amarillo {
   background-color: #eeff00 !important;
   color: black !important;
 }
 
-/* QUT - Naranja (aplica a ambos cuando está asignado) */
+/* Asignado a QUT */
 .retener-naranja {
   background-color: #ff8800 !important;
   color: black !important;

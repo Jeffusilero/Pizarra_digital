@@ -147,20 +147,24 @@ function loadData() {
     const newRow = tableBody.insertRow();
     let descClass = '';
     let ciudadClass = '';
-    let ciudadValue = item.ciudad || ''; // Asegura que siempre haya un valor para ciudad
+    let ciudadValue = item.ciudad || ''; // Mostrar ciudad aunque esté vacía
     
     if(item.descripcion === "RETENER") {
-      // Descripción siempre en rojo inicialmente
+      // Descripción SIEMPRE en rojo
       descClass = 'retener';
-      // Ciudad solo muestra color si está asignada explícitamente
-      ciudadClass = item.ciudad && item.ciudad.trim() !== '' ? 
-                   (item.ciudad === "GYE" ? 'retener-amarillo' : 'retener-naranja') : '';
-    } 
+      
+      // Ciudad CON TEXTO pero SIN COLOR (fondo blanco)
+      ciudadClass = ''; // Sin clase = fondo blanco
+      
+      // Solo aplicar color si está asignada (al dar clic en "Asignar")
+      if(item.ciudad && item.ciudad.trim() !== '') {
+        ciudadClass = item.ciudad === "GYE" ? 'retener-amarillo' : 'retener-naranja';
+        // La descripción sigue en rojo (no cambia)
+      }
+    }
     else if(item.descripcion === "LIBERAR") {
-      // Para LIBERAR, ambos en verde y mostrar ciudad siempre
       descClass = 'liberar';
       ciudadClass = 'liberar';
-      ciudadValue = item.ciudad || '';
     }
     
     newRow.innerHTML = `
