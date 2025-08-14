@@ -28,14 +28,15 @@ function loginWithGoogle() {
   const provider = new firebase.auth.GoogleAuthProvider();
   showLoading();
   
-  auth.signInWithRedirect(provider)
+  auth.signInWithPopup(provider)
+    .then(() => {
+      hideLoading();
+      window.location.reload();
+    })
     .catch(error => {
-      console.error("Error redirección:", error);
-      auth.signInWithPopup(provider)
-        .catch(finalError => {
-          alert("Por favor permite ventanas emergentes para iniciar sesión");
-          console.error("Error final:", finalError);
-        });
+      hideLoading();
+      console.error("Error al iniciar sesión:", error);
+      alert("Error al iniciar sesión. Por favor intenta nuevamente.");
     });
 }
 
@@ -53,49 +54,30 @@ function initAuthStateListener() {
   auth.onAuthStateChanged(user => {
     if (user) {
       console.log("Usuario autenticado:", user.email);
+      document.getElementById('mainContainer').style.display = 'block';
       loadAppData();
     } else {
       console.log("Usuario no autenticado");
-      // Mostrar un botón de login en lugar de redireccionar automáticamente
-      if (!document.getElementById('loginBtn')) {
+      document.getElementById('mainContainer').style.display = 'none';
+      
+      // Mostrar botón de login si no existe
+      if (!document.getElementById('loginBtnContainer')) {
+        const loginContainer = document.createElement('div');
+        loginContainer.id = 'loginBtnContainer';
+        loginContainer.style.textAlign = 'center';
+        loginContainer.style.marginTop = '20%';
+        
         const loginBtn = document.createElement('button');
-        loginBtn.id = 'loginBtn';
         loginBtn.textContent = 'Iniciar sesión con Google';
         loginBtn.className = 'google-login-btn';
         loginBtn.onclick = loginWithGoogle;
         
-        const container = document.querySelector('.container');
-        if (container) {
-          container.innerHTML = '';
-          container.appendChild(loginBtn);
-        }
+        loginContainer.appendChild(loginBtn);
+        document.body.appendChild(loginContainer);
       }
     }
   });
 }
-
-// Agregar estilos para el botón de Google
-const style = document.createElement('style');
-style.textContent = `
-  .google-login-btn {
-    padding: 12px 24px;
-    background-color: #4285F4;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 16px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    margin: 20% auto;
-  }
-  .google-login-btn:hover {
-    background-color: #3367D6;
-  }
-`;
-document.head.appendChild(style);
 
 /*****************************
  * FUNCIONES PRINCIPALES *
@@ -157,7 +139,6 @@ async function saveToFirestore() {
 /*****************************
  * FUNCIONES DE INTERFAZ *
  *****************************/
-// Modificar la función loadData para mantener los colores correctamente
 function loadData() {
   const tableBody = document.getElementById('pizarra-table').getElementsByTagName('tbody')[0];
   tableBody.innerHTML = '';
@@ -168,22 +149,21 @@ function loadData() {
     let ciudadClass = '';
     
     // Obtener ciudad para TODOS los items
-    const ciudad = manifestAssignments[item.manifiesto] || item.ciudad || '';
+    const ciudad = item.ciudad || '';
     
     // Aplicar estilos basados en el estado guardado
     if(item.descripcion === "RETENER") {
+      descClass = 'retener'; // Rojo por defecto
+      
+      // Solo aplicar color a ciudad si ya está asignada
       if(ciudad === "GYE") {
-        descClass = 'retener-amarillo';
         ciudadClass = 'retener-amarillo';
       } else if(ciudad === "QUT") {
-        descClass = 'retener-naranja';
         ciudadClass = 'retener-naranja';
-      } else {
-        descClass = 'retener';
       }
     } else if(item.descripcion === "LIBERAR") {
       descClass = 'liberar';
-      ciudadClass = 'liberar';
+      ciudadClass = '';
     }
     
     newRow.innerHTML = `
@@ -260,21 +240,7 @@ async function assignFromRow(button) {
       
       try {
         await saveToFirestore();
-        
-        // Aplicar estilos solo cuando se hace clic en Asignar
-        const descCell = row.cells[2];
-        const ciudadCell = row.cells[3];
-        
-        if (ciudad === "GYE") {
-          descCell.className = 'retener-amarillo';
-          ciudadCell.className = 'retener-amarillo';
-        } else if (ciudad === "QUT") {
-          descCell.className = 'retener-naranja';
-          ciudadCell.className = 'retener-naranja';
-        }
-        
-        // Actualizar el texto de la ciudad
-        ciudadCell.textContent = ciudad;
+        loadData(); // Recargar los datos para asegurar consistencia
       } catch (error) {
         console.error(error);
       }
@@ -298,7 +264,7 @@ async function assignManifest() {
   // Asignar ciudad al manifiesto
   manifestAssignments[manifiesto] = ciudad;
   
-  // Actualizar ciudad en la base de datos (sin cambiar estilos aún)
+  // Actualizar ciudad en la base de datos para los items RETENER de este manifiesto
   database.forEach(item => {
     if (item.manifiesto === manifiesto && item.descripcion === "RETENER") {
       item.ciudad = ciudad;
@@ -329,7 +295,7 @@ async function addItem() {
     guia: guia,
     manifiesto: manifiesto,
     descripcion: descripcion,
-    ciudad: ciudad // Esto ahora puede estar vacío incluso para RETENER
+    ciudad: ciudad
   });
   
   try {
@@ -367,9 +333,9 @@ async function handleFileImport(fileInput) {
         
         if (!guia || !manifiesto || !descripcion) continue;
 
-        // Obtener ciudad del manifiesto si existe
+        // Obtener ciudad del manifiesto si existe y es RETENER
         let ciudad = '';
-        if (manifestAssignments[manifiesto]) {
+        if (descripcion === "RETENER" && manifestAssignments[manifiesto]) {
           ciudad = manifestAssignments[manifiesto];
         }
 
@@ -424,55 +390,6 @@ async function deleteItem(button) {
   }
 }
 
-function editItem(button) {
-  const row = button.closest('tr');
-  currentEditingRow = row;
-  
-  const guia = row.cells[0].textContent;
-  const manifiesto = row.cells[1].textContent;
-  const descripcion = row.cells[2].textContent;
-  
-  document.getElementById('edit-guia').value = guia;
-  document.getElementById('edit-manifiesto').value = manifiesto;
-  document.getElementById('edit-descripcion').value = descripcion;
-  
-  document.getElementById('editModal').style.display = 'block';
-}
-
-async function saveChanges() {
-  const guia = document.getElementById('edit-guia').value;
-  const manifiesto = document.getElementById('edit-manifiesto').value;
-  const descripcion = document.getElementById('edit-descripcion').value;
-  
-  if (!guia) {
-    alert('Por favor complete la guía');
-    return;
-  }
-  
-  // Actualizar la fila en la interfaz
-  currentEditingRow.cells[0].textContent = guia;
-  currentEditingRow.cells[1].textContent = manifiesto;
-  currentEditingRow.cells[2].textContent = descripcion;
-  
-  // Actualizar en la base de datos
-  const index = database.findIndex(item => item.guia === currentEditingRow.cells[0].textContent);
-  if(index !== -1) {
-    const ciudad = (descripcion === "RETENER" && manifestAssignments[manifiesto]) ? manifestAssignments[manifiesto] : '';
-    
-    database[index] = {
-      guia: guia,
-      manifiesto: manifiesto,
-      descripcion: descripcion,
-      ciudad: ciudad
-    };
-    
-    await saveToFirestore();
-    loadData(); // Recargar los datos para asegurar consistencia
-  }
-  
-  closeEditModal();
-}
-
 async function liberarFromRow(button) {
   const row = button.closest('tr');
   const guia = row.cells[0].textContent;
@@ -484,18 +401,7 @@ async function liberarFromRow(button) {
     
     try {
       await saveToFirestore();
-      
-      row.cells[2].textContent = "LIBERAR";
-      row.cells[2].className = 'liberar';
-      row.cells[3].textContent = '';
-      row.cells[3].className = 'liberar';
-      
-      const actionCell = row.cells[4];
-      actionCell.innerHTML = `
-        <div class="action-buttons">
-          <button class="btn-action btn-gray" onclick="deleteItem(this)">Eliminar</button>
-        </div>
-      `;
+      loadData();
     } catch (error) {
       alert('Error al liberar el item');
       console.error(error);
