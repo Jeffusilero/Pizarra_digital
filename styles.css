@@ -277,3 +277,24 @@ th {
   color: #333;
   margin-top: 15px;
 }
+
+/* Estilos para celdas de ciudad */
+td.retener {
+  background-color: #ff4444 !important;
+  color: white;
+}
+
+td.retener-amarillo {
+  background-color: #eeff00 !important;
+  color: black;
+}
+
+td.retener-naranja {
+  background-color: #ff8800 !important;
+  color: black;
+}
+
+td.liberar {
+  background-color: #00C851 !important;
+  color: white;
+}

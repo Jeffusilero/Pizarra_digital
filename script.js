@@ -132,23 +132,25 @@ function loadData() {
   database.forEach(item => {
     const newRow = tableBody.insertRow();
     let descClass = '';
+    let ciudadClass = ''; // Nueva variable para clase de ciudad
+    
+    // Obtener ciudad (mostrar para TODAS las descripciones)
     const ciudad = item.ciudad || '';
     
-    // Solo aplica color si ya está asignado (no cambia automáticamente)
-    if (item.descripcion === "RETENER" && ciudad) {
-      descClass = ciudad === "GYE" ? 'retener-amarillo' : 
-                 ciudad === "QUT" ? 'retener-naranja' : 'retener';
-    } else if (item.descripcion === "RETENER") {
-      descClass = 'retener'; // Rojo por defecto
-    } else if (item.descripcion === "LIBERAR") {
-      descClass = 'liberar'; // Verde para liberar
+    if(item.descripcion === "RETENER") {
+      // Rojo por defecto (el color cambiará solo al hacer clic en Asignar)
+      descClass = 'retener';
+      ciudadClass = 'retener'; // Mismo color que descripción
+    } else if(item.descripcion === "LIBERAR") {
+      descClass = 'liberar';
+      ciudadClass = 'liberar';
     }
     
     newRow.innerHTML = `
       <td>${item.guia}</td>
       <td>${item.manifiesto}</td>
       <td class="${descClass}">${item.descripcion}</td>
-      <td>${ciudad}</td>
+      <td class="${ciudadClass}">${ciudad}</td>
       <td>${generateActionButtons(item.descripcion)}</td>
     `;
   });
@@ -463,28 +465,33 @@ async function assignFromRow(button) {
   
   if (manifestAssignments[manifiesto]) {
     const ciudad = manifestAssignments[manifiesto];
+    const guia = row.cells[0].textContent;
     
     // Actualiza la ciudad en la base de datos
-    const index = database.findIndex(item => item.guia === row.cells[0].textContent);
+    const index = database.findIndex(item => item.guia === guia);
     if (index !== -1) {
       database[index].ciudad = ciudad;
-    }
-    
-    try {
-      await saveToFirestore();
       
-      // Cambia el color SOLO al dar clic en "Asignar"
-      const descCell = row.cells[2];
-      if (ciudad === "GYE") {
-        descCell.className = "retener-amarillo";
-      } else if (ciudad === "QUT") {
-        descCell.className = "retener-naranja";
+      try {
+        await saveToFirestore();
+        
+        // Cambia el color SOLO al dar clic en "Asignar"
+        const descCell = row.cells[2];
+        const ciudadCell = row.cells[3];
+        
+        if (ciudad === "GYE") {
+          descCell.className = "retener-amarillo";
+          ciudadCell.className = "retener-amarillo";
+        } else if (ciudad === "QUT") {
+          descCell.className = "retener-naranja";
+          ciudadCell.className = "retener-naranja";
+        }
+        
+        // Actualiza el texto de la ciudad
+        ciudadCell.textContent = ciudad;
+      } catch (error) {
+        console.error(error);
       }
-      
-      // Actualiza la celda de ciudad
-      row.cells[3].textContent = ciudad;
-    } catch (error) {
-      console.error(error);
     }
   } else {
     alert('Este manifiesto no tiene una ciudad asignada. Use el botón "Asignar Manifiesto" primero.');
