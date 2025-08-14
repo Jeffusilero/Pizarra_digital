@@ -150,15 +150,16 @@ function loadData() {
     let ciudadValue = item.ciudad || ''; // Asegura que siempre haya un valor para ciudad
     
     if(item.descripcion === "RETENER") {
-      // Descripción en rojo si no está asignada, o color correspondiente si está asignada
-      descClass = item.ciudad ? (item.ciudad === "GYE" ? 'retener-amarillo' : 'retener-naranja') : 'retener';
-      // Ciudad solo muestra color si está asignada
-      ciudadClass = item.ciudad ? descClass : '';
-    }
+      // Descripción siempre en rojo inicialmente
+      descClass = 'retener';
+      // Ciudad solo muestra color si está asignada explícitamente
+      ciudadClass = item.ciudad && item.ciudad.trim() !== '' ? 
+                   (item.ciudad === "GYE" ? 'retener-amarillo' : 'retener-naranja') : '';
+    } 
     else if(item.descripcion === "LIBERAR") {
+      // Para LIBERAR, ambos en verde y mostrar ciudad siempre
       descClass = 'liberar';
       ciudadClass = 'liberar';
-      // Mostrar ciudad aunque esté vacía (pero con fondo verde)
       ciudadValue = item.ciudad || '';
     }
     
@@ -228,7 +229,6 @@ async function assignFromRow(button) {
   
   if (manifestAssignments[manifiesto]) {
     const ciudad = manifestAssignments[manifiesto];
-    const colorClass = ciudad === "GYE" ? 'retener-amarillo' : 'retener-naranja';
     
     const index = database.findIndex(item => item.guia === guia);
     if (index !== -1) {
@@ -289,14 +289,12 @@ async function addItem() {
     return;
   }
 
-  // Ciudad siempre en blanco al agregar, aunque el manifiesto tenga asignación
-  const ciudad = ''; // <-- Cambio clave aquí
-  
+  // Ciudad siempre vacía al agregar, incluso si el manifiesto tiene asignación
   database.push({
     guia: guia,
     manifiesto: manifiesto,
     descripcion: descripcion,
-    ciudad: ciudad // Siempre vacío al agregar
+    ciudad: '' // Fuerza ciudad vacía sin importar la asignación del manifiesto
   });
   
   try {
@@ -334,11 +332,8 @@ async function handleFileImport(fileInput) {
         
         if (!guia || !manifiesto || !descripcion) continue;
 
-        // Obtener ciudad del manifiesto si existe y es RETENER
-        let ciudad = '';
-        if (descripcion === "RETENER" && manifestAssignments[manifiesto]) {
-          ciudad = manifestAssignments[manifiesto];
-        }
+        // Ciudad siempre vacía al importar para RETENER
+        const ciudad = descripcion === "RETENER" ? '' : (database.find(item => item.guia === guia)?.ciudad || '';
 
         const existingIndex = database.findIndex(item => item.guia === guia);
 
