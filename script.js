@@ -333,7 +333,7 @@ async function handleFileImport(fileInput) {
         if (!guia || !manifiesto || !descripcion) continue;
 
         // Ciudad siempre vacía al importar para RETENER
-        const ciudad = descripcion === "RETENER" ? '' : (database.find(item => item.guia === guia)?.ciudad || '';
+        const ciudad = descripcion === "RETENER" ? '' : (database.find(item => item.guia === guia)?.ciudad || '');
 
         const existingIndex = database.findIndex(item => item.guia === guia);
 
