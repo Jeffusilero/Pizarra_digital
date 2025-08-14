@@ -1,4 +1,30 @@
-/* Estilos generales */
+/* Fondo blanco por defecto para todas las celdas */
+td {
+  background-color: white;
+}
+
+/* Estilos especiales */
+.retener {
+  background-color: #ff4444 !important; /* Rojo para RETENER sin asignar */
+  color: white;
+}
+
+.retener-amarillo {
+  background-color: #eeff00 !important; /* Amarillo para GYE */
+  color: black;
+}
+
+.retener-naranja {
+  background-color: #ff8800 !important; /* Naranja para QUT */
+  color: black;
+}
+
+.liberar {
+  background-color: #00C851 !important; /* Verde para LIBERAR */
+  color: white;
+}
+
+/* Resto del CSS permanece igual */
 body {
   font-family: Arial, sans-serif;
   margin: 0;
@@ -12,7 +38,6 @@ body {
 .container {
   width: 70%;
   max-width: 1200px;
-  display: none; /* Oculto inicialmente hasta autenticación */
 }
 
 h2 {
@@ -40,35 +65,6 @@ th {
   font-weight: bold;
 }
 
-/* Estilos para celdas */
-td {
-  background-color: white;
-  color: black;
-}
-
-/* Estilos para RETENER */
-.retener {
-  background-color: #ff4444 !important;
-  color: white !important;
-}
-
-.retener-amarillo {
-  background-color: #eeff00 !important;
-  color: black !important;
-}
-
-.retener-naranja {
-  background-color: #ff8800 !important;
-  color: black !important;
-}
-
-/* Estilos para LIBERAR */
-.liberar {
-  background-color: #00C851 !important;
-  color: white !important;
-}
-
-/* Botones de acción */
 .action-buttons {
   display: flex;
   gap: 5px;
@@ -104,7 +100,6 @@ td {
   color: white;
 }
 
-/* Sección de agregar */
 .add-section {
   margin-bottom: 15px;
   padding: 10px;
@@ -151,7 +146,7 @@ td {
   display: none;
 }
 
-/* Modales */
+/* Modal */
 .modal {
   display: none;
   position: fixed;
@@ -211,7 +206,6 @@ td {
   font-size: 0.9em;
 }
 
-/* Buscador */
 .search-container {
   width: 100%;
   margin: 0 auto 15px auto;
@@ -235,7 +229,6 @@ td {
   font-weight: bold;
 }
 
-/* Menú de acciones */
 .action-menu {
   display: none;
   background-color: white;
@@ -248,7 +241,6 @@ td {
 
 .action-menu .action-buttons {
   display: flex;
-  flex-direction: column;
   gap: 5px;
 }
 
@@ -286,22 +278,37 @@ td {
   margin-top: 15px;
 }
 
-/* Botón de Google */
-.google-login-btn {
-  padding: 12px 24px;
-  background-color: #4285F4;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin: 20px auto;
+/* Estilos base para celdas */
+td {
+  background-color: white;
+  color: black;
 }
 
-.google-login-btn:hover {
-  background-color: #3367D6;
+/* Estilos para RETENER */
+.retener {
+  background-color: #ff4444 !important;
+  color: white !important;
+}
+
+.retener-amarillo {
+  background-color: #eeff00 !important;
+  color: black !important;
+}
+
+.retener-naranja {
+  background-color: #ff8800 !important;
+  color: black !important;
+}
+
+/* Estilos para LIBERAR */
+.liberar {
+  background-color: #00C851 !important;
+  color: white !important;
+}
+
+/* Estilos para celdas de ciudad */
+td.retener-amarillo,
+td.retener-naranja,
+td.liberar {
+  font-weight: bold;
 }
