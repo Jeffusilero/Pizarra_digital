@@ -149,22 +149,19 @@ function loadData() {
     let ciudadClass = '';
     
     if(item.descripcion === "RETENER") {
-      // Descripción siempre en rojo inicialmente
+      // Descripción siempre en rojo
       descClass = 'retener';
-      // Ciudad en blanco inicialmente
-      ciudadClass = '';
-      
-      // Si tiene ciudad asignada, aplicar color a ambos
-      if(item.ciudad) {
-        const colorClass = item.ciudad === "GYE" ? 'retener-amarillo' : 'retener-naranja';
-        descClass = colorClass;
-        ciudadClass = colorClass;
-      }
+      // Ciudad solo muestra color si está asignada
+      ciudadClass = item.ciudad ? (item.ciudad === "GYE" ? 'retener-amarillo' : 'retener-naranja') : '';
     } 
     else if(item.descripcion === "LIBERAR") {
-      // Para LIBERAR, ambos en verde y mostrar ciudad
+      // Para LIBERAR, ambos en verde y mostrar ciudad siempre
       descClass = 'liberar';
       ciudadClass = 'liberar';
+    } else {
+      // Para otros estados (EDITAR...)
+      descClass = '';
+      ciudadClass = '';
     }
     
     newRow.innerHTML = `
@@ -398,7 +395,8 @@ async function liberarFromRow(button) {
   const index = database.findIndex(item => item.guia === guia);
   if(index !== -1) {
     database[index].descripcion = "LIBERAR";
-    database[index].ciudad = '';
+    // No borramos la ciudad, solo cambiamos el estado
+    // database[index].ciudad = ''; // <-- Esta línea debe ELIMINARSE
     
     try {
       await saveToFirestore();
