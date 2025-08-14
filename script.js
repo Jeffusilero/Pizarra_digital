@@ -55,9 +55,6 @@ function initAuthStateListener() {
     if (user) {
       console.log("Usuario autenticado:", user.email);
       document.getElementById('mainContainer').style.display = 'block';
-      if (document.getElementById('loginBtnContainer')) {
-        document.getElementById('loginBtnContainer').remove();
-      }
       loadAppData();
     } else {
       console.log("Usuario no autenticado");
@@ -150,35 +147,30 @@ function loadData() {
     const newRow = tableBody.insertRow();
     let descClass = '';
     let ciudadClass = '';
-    let ciudadText = '';
     
+    // Obtener ciudad para TODOS los items
+    const ciudad = item.ciudad || '';
+    
+    // Aplicar estilos basados en el estado guardado
     if(item.descripcion === "RETENER") {
-      // Por defecto rojo en descripción, blanco en ciudad
-      descClass = 'retener';
-      ciudadText = item.ciudad || '';
+      descClass = 'retener'; // Rojo por defecto
       
-      // Si tiene ciudad asignada, aplicar colores correspondientes
-      if(item.ciudad) {
-        if(item.ciudad === "GYE") {
-          descClass = 'retener-amarillo';
-          ciudadClass = 'retener-amarillo';
-        } else if(item.ciudad === "QUT") {
-          descClass = 'retener-naranja';
-          ciudadClass = 'retener-naranja';
-        }
+      // Solo aplicar color a ciudad si ya está asignada
+      if(ciudad === "GYE") {
+        ciudadClass = 'retener-amarillo';
+      } else if(ciudad === "QUT") {
+        ciudadClass = 'retener-naranja';
       }
     } else if(item.descripcion === "LIBERAR") {
-      // Para LIBERAR, ambos campos verdes y ciudad vacía
       descClass = 'liberar';
-      ciudadClass = 'liberar';
-      ciudadText = '';
+      ciudadClass = '';
     }
     
     newRow.innerHTML = `
       <td>${item.guia}</td>
       <td>${item.manifiesto}</td>
       <td class="${descClass}">${item.descripcion}</td>
-      <td class="${ciudadClass}">${ciudadText}</td>
+      <td class="${ciudadClass}">${ciudad}</td>
       <td>${generateActionButtons(item.descripcion)}</td>
     `;
   });
@@ -248,10 +240,9 @@ async function assignFromRow(button) {
       
       try {
         await saveToFirestore();
-        loadData(); // Recargar para mostrar cambios
+        loadData(); // Recargar los datos para asegurar consistencia
       } catch (error) {
         console.error(error);
-        alert('Error al asignar ciudad');
       }
     }
   } else {
@@ -316,7 +307,6 @@ async function addItem() {
     closeAddModal();
   } catch (error) {
     console.error(error);
-    alert('Error al agregar item');
   }
 }
 
@@ -392,57 +382,12 @@ async function deleteItem(button) {
   
   try {
     await saveToFirestore();
-    loadData();
+    row.remove();
+    updateCounter();
   } catch (error) {
     alert('Error al eliminar el item');
     console.error(error);
   }
-}
-
-function editItem(button) {
-  const row = button.closest('tr');
-  currentEditingRow = row;
-  
-  const guia = row.cells[0].textContent;
-  const manifiesto = row.cells[1].textContent;
-  const descripcion = row.cells[2].textContent;
-  
-  document.getElementById('edit-guia').value = guia;
-  document.getElementById('edit-manifiesto').value = manifiesto;
-  document.getElementById('edit-descripcion').value = descripcion;
-  
-  document.getElementById('editModal').style.display = 'block';
-}
-
-async function saveChanges() {
-  const guia = document.getElementById('edit-guia').value;
-  const manifiesto = document.getElementById('edit-manifiesto').value;
-  const descripcion = document.getElementById('edit-descripcion').value;
-  
-  if (!guia) {
-    alert('Por favor complete la guía');
-    return;
-  }
-  
-  const index = database.findIndex(item => item.guia === currentEditingRow.cells[0].textContent);
-  if(index !== -1) {
-    // Mantener la ciudad si es RETENER y ya estaba asignada
-    const ciudad = (descripcion === "RETENER") ? 
-      (database[index].ciudad || '') : 
-      '';
-    
-    database[index] = {
-      guia: guia,
-      manifiesto: manifiesto,
-      descripcion: descripcion,
-      ciudad: ciudad
-    };
-    
-    await saveToFirestore();
-    loadData();
-  }
-  
-  closeEditModal();
 }
 
 async function liberarFromRow(button) {
@@ -506,14 +451,12 @@ function filterTable() {
  * EVENT LISTENERS *
  *****************************/
 document.addEventListener('click', function(e) {
-  // Cerrar menús de acción al hacer clic fuera
   if(!e.target.closest('.action-trigger')) {
     document.querySelectorAll('.action-menu').forEach(menu => {
       menu.style.display = 'none';
     });
   }
   
-  // Cerrar modales al hacer clic fuera
   const modals = ['addModal', 'assignModal', 'editModal'];
   modals.forEach(modalId => {
     if (e.target == document.getElementById(modalId)) {
