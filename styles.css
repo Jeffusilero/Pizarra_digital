@@ -306,3 +306,9 @@ td {
 .google-login-btn:hover {
   background-color: #3367D6;
 }
+
+/* Estilos para LIBERAR (aplica a descripción y ciudad) */
+.liberar {
+  background-color: #00C851 !important;
+  color: white !important;
+}
