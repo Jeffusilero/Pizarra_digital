@@ -468,4 +468,4 @@ document.addEventListener('click', function(e) {
 
 document.addEventListener('DOMContentLoaded', () => {
   initAuthStateListener();
-}); 
+});
