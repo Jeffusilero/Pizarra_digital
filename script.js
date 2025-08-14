@@ -150,11 +150,11 @@ function loadData() {
     let ciudadValue = item.ciudad || ''; // Asegura que siempre haya un valor para ciudad
     
     if(item.descripcion === "RETENER") {
-      descClass = 'retener';
-      // Ciudad solo muestra color si está asignada explícitamente
-      ciudadClass = item.ciudad && item.ciudad !== '' ? 
-                  (item.ciudad === "GYE" ? 'retener-amarillo' : 'retener-naranja') : '';
-    } 
+      // Descripción en rojo si no está asignada, o color correspondiente si está asignada
+      descClass = item.ciudad ? (item.ciudad === "GYE" ? 'retener-amarillo' : 'retener-naranja') : 'retener';
+      // Ciudad solo muestra color si está asignada
+      ciudadClass = item.ciudad ? descClass : '';
+    }
     else if(item.descripcion === "LIBERAR") {
       descClass = 'liberar';
       ciudadClass = 'liberar';
@@ -228,21 +228,26 @@ async function assignFromRow(button) {
   
   if (manifestAssignments[manifiesto]) {
     const ciudad = manifestAssignments[manifiesto];
+    const colorClass = ciudad === "GYE" ? 'retener-amarillo' : 'retener-naranja';
     
-    // Actualizar en la base de datos
     const index = database.findIndex(item => item.guia === guia);
     if (index !== -1) {
-      database[index].ciudad = ciudad;
+      // Actualizamos ambos: ciudad y manteniendo RETENER
+      database[index] = {
+        ...database[index],
+        ciudad: ciudad,
+        descripcion: "RETENER" // Aseguramos que siga siendo RETENER
+      };
       
       try {
         await saveToFirestore();
-        loadData(); // Recargar los datos para asegurar consistencia
+        loadData(); // Esto aplicará los colores correctamente
       } catch (error) {
         console.error(error);
       }
     }
   } else {
-    alert('Este manifiesto no tiene una ciudad asignada. Use el botón "Asignar Manifiesto" primero.');
+    alert('Este manifiesto no tiene ciudad asignada. Use el botón "Asignar Manifiesto" primero.');
   }
   
   toggleActionMenu(button.closest('.action-trigger').querySelector('button'));
@@ -284,14 +289,14 @@ async function addItem() {
     return;
   }
 
-  // Ciudad solo se asigna si es RETENER y el manifiesto está asignado
-  const ciudad = (descripcion === "RETENER" && manifestAssignments[manifiesto]) ? manifestAssignments[manifiesto] : '';
+  // Ciudad siempre en blanco al agregar, aunque el manifiesto tenga asignación
+  const ciudad = ''; // <-- Cambio clave aquí
   
   database.push({
     guia: guia,
     manifiesto: manifiesto,
     descripcion: descripcion,
-    ciudad: ciudad
+    ciudad: ciudad // Siempre vacío al agregar
   });
   
   try {
