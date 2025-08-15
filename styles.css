@@ -43,7 +43,7 @@ th {
 /* Celda normal (fondo blanco) */
 td {
   background-color: none;
-  color: rgb(57, 192, 102);
+  color: black;
   white-space: nowrap; /* Evita que el texto se oculte */
   overflow: visible;   /* Permite que el texto sea visible */
 }
@@ -57,7 +57,7 @@ td {
 
 /* Ciudad inicial (blanca con texto negro) */
 .ciudad-blanca {
-  background-color: white !important;
+  background-color: none !important;
   color: black !important;
   font-weight: bold;
 }
