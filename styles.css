@@ -48,20 +48,21 @@ td {
   overflow: visible;
 }
 
-/* ESTADO INICIAL - RETENER (descripción) */
+/* ESTADO INICIAL - RETENER (sin asignar) */
 .retener {
   background-color: #ff0000 !important; /* Fondo rojo */
   color: white !important;             /* Texto blanco */
   font-weight: bold;
 }
 
-/* CIUDAD SIN ASIGNAR (estado inicial) */
-.ciudad-sin-asignar {
+/* CIUDAD en items RETENER (sin asignar) */
+.retener + .ciudad-sin-asignar {
   background-color: white !important;  /* Fondo blanco */
   color: black !important;            /* Texto negro */
+  font-weight: normal;
 }
 
-/* RETENER ASIGNADO A GYE */
+/* RETENER ASIGNADO A GYE (después de click en Asignar) */
 .retener-amarillo {
   background-color: #ffff00 !important; /* Fondo amarillo */
   color: black !important;             /* Texto negro */
@@ -74,23 +75,37 @@ td {
   font-weight: bold;
 }
 
-/* RETENER ASIGNADO A QUT */
+/* RETENER ASIGNADO A QUT (después de click en Asignar) */
 .retener-naranja {
   background-color: #ffa500 !important; /* Fondo naranja */
-  color: white !important;             /* Texto blanco */
+  color: black !important;             /* Texto negro */
   font-weight: bold;
 }
 
 .ciudad-naranja {
   background-color: #ffa500 !important; /* Fondo naranja */
-  color: white !important;             /* Texto blanco */
+  color: black !important;             /* Texto negro */
   font-weight: bold;
 }
 
-/* ESTADO LIBERAR */
+/* Para TODAS las otras descripciones (no RETENER) */
+td:not(.retener):not(.retener-amarillo):not(.retener-naranja):not(.liberar) {
+  background-color: white !important;  /* Fondo blanco */
+  color: black !important;            /* Texto negro */
+  font-weight: normal;
+}
+
+/* CIUDAD para items no RETENER */
+td.ciudad-no-retenida {
+  background-color: white !important;  /* Fondo blanco */
+  color: black !important;            /* Texto negro */
+  font-weight: normal;
+}
+
+/* LIBERAR (mantengo tus estilos originales) */
 .liberar {
-  background-color: #00C851 !important; /* Fondo verde */
-  color: white !important;             /* Texto blanco */
+  background-color: #00C851 !important;
+  color: white !important;
   font-weight: bold;
 }
 
