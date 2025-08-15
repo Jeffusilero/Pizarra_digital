@@ -148,54 +148,29 @@ function loadData() {
     
     // Celda de descripción
     const descCell = newRow.insertCell(2);
+    descCell.className = item.descripcion === "RETENER" ? 'retener' : '';
+    descCell.textContent = item.descripcion;
     
-    if(item.descripcion === "RETENER") {
-      // Creamos un contenedor para RETENER y ciudad
-      const container = document.createElement('div');
-      container.style.display = 'flex';
-      container.style.justifyContent = 'center';
-      container.style.gap = '5px';
-      
-      // Elemento RETENER (siempre rojo)
-      const retenerSpan = document.createElement('span');
-      retenerSpan.style.color = 'red';
-      retenerSpan.style.fontWeight = 'bold';
-      retenerSpan.textContent = 'RETENER';
-      container.appendChild(retenerSpan);
-      
-      // Elemento ciudad (si existe)
-      if(item.ciudad && (item.ciudad === 'GYE' || item.ciudad === 'QUT')) {
-        const ciudadSpan = document.createElement('span');
-        ciudadSpan.style.backgroundColor = 'white';
-        ciudadSpan.style.padding = '2px 5px';
-        ciudadSpan.style.borderRadius = '3px';
-        ciudadSpan.textContent = item.ciudad;
-        ciudadSpan.id = 'ciudad-' + item.guia;
-        container.appendChild(ciudadSpan);
+    // Celda de ciudad
+    const ciudadCell = newRow.insertCell(3);
+    if(item.ciudad) {
+      ciudadCell.textContent = item.ciudad;
+      if(item.descripcion === "RETENER") {
+        if(item.ciudad === "GYE") {
+          descCell.classList.add('retener-amarillo');
+          ciudadCell.classList.add('retener-amarillo');
+        } else if(item.ciudad === "QUT") {
+          descCell.classList.add('retener-naranja');
+          ciudadCell.classList.add('retener-naranja');
+        }
       }
-      
-      descCell.appendChild(container);
-      
-      // Aplicar colores si ya está asignado
-      if(item.ciudad === 'GYE') {
-        retenerSpan.style.backgroundColor = '#eeff00';
-        descCell.querySelector('span:last-child').style.backgroundColor = '#eeff00';
-      } else if(item.ciudad === 'QUT') {
-        retenerSpan.style.backgroundColor = '#ff8800';
-        descCell.querySelector('span:last-child').style.backgroundColor = '#ff8800';
-      }
-    } else {
-      descCell.textContent = item.descripcion;
-      }
+    }
     
-    // Resto de celdas (sin cambios)
+    // Resto de celdas
     newRow.insertCell(0).textContent = item.guia;
     newRow.insertCell(1).textContent = item.manifiesto;
     
-    // Celda de ciudad (la dejamos vacía porque ya la mostramos en descripción)
-    newRow.insertCell(3).textContent = '';
-    
-    // Celda de acciones (sin cambios)
+    // Celda de acciones
     const actionCell = newRow.insertCell(4);
     actionCell.innerHTML = generateActionButtons(item.descripcion, item.guia);
   });
@@ -265,18 +240,24 @@ async function assignFromRow(button) {
       try {
         await saveToFirestore();
         
-        // Actualizar los colores
+        // Actualizar colores
         const descCell = row.cells[2];
-        const retenerSpan = descCell.querySelector('span:first-child');
-        const ciudadSpan = descCell.querySelector('span:last-child');
+        const ciudadCell = row.cells[3];
         
+        // Resetear clases primero
+        descCell.className = 'retener';
+        ciudadCell.className = '';
+        
+        // Aplicar nuevos colores
         if(ciudad === 'GYE') {
-          retenerSpan.style.backgroundColor = '#eeff00';
-          if(ciudadSpan) ciudadSpan.style.backgroundColor = '#eeff00';
+          descCell.classList.add('retener-amarillo');
+          ciudadCell.classList.add('retener-amarillo');
         } else if(ciudad === 'QUT') {
-          retenerSpan.style.backgroundColor = '#ff8800';
-          if(ciudadSpan) ciudadSpan.style.backgroundColor = '#ff8800';
+          descCell.classList.add('retener-naranja');
+          ciudadCell.classList.add('retener-naranja');
         }
+        
+        ciudadCell.textContent = ciudad;
         
       } catch (error) {
         console.error(error);
