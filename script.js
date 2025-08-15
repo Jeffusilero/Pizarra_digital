@@ -345,32 +345,19 @@ async function handleFileImport(fileInput) {
       const data = new Uint8Array(e.target.result);
       const workbook = XLSX.read(data, { type: 'array' });
       const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-      
-      // Convertir a JSON usando el rango de datos (ignorando posibles headers)
-      const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: ['A', 'B', 'C'], range: 1 });
-      
-      if (!jsonData || jsonData.length === 0) {
-        throw new Error('El archivo está vacío');
-      }
+      const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
 
-      let importedCount = 0;
-      const errors = [];
-
-      for (let i = 0; i < jsonData.length; i++) {
+      for (let i = 1; i < jsonData.length; i++) {
         const rowData = jsonData[i];
+        if (!rowData || rowData.length < 3) continue;
+
+        const guia = (rowData[0]?.toString() || '').trim();
+        const manifiesto = (rowData[1]?.toString() || '').trim();
+        const descripcion = (rowData[2]?.toString() || '').trim().toUpperCase();
         
-        // Obtener valores de las columnas A, B, C
-        const guia = (rowData.A || '').toString().trim();
-        const manifiesto = (rowData.B || '').toString().trim();
-        const descripcion = (rowData.C || '').toString().trim().toUpperCase();
+        if (!guia || !manifiesto || !descripcion) continue;
 
-        // Validar campos mínimos
-        if (!guia || !manifiesto || !descripcion) {
-          errors.push(`Fila ${i + 2}: Faltan datos obligatorios`);
-          continue;
-        }
-
-        // Obtener ciudad de manifest si existe y es RETENER
+        // Obtener ciudad asignada al manifiesto (si existe y es RETENER)
         const ciudad = (descripcion === "RETENER" && manifestAssignments[manifiesto]) ? manifestAssignments[manifiesto] : '';
 
         const existingIndex = database.findIndex(item => item.guia === guia);
@@ -382,7 +369,6 @@ async function handleFileImport(fileInput) {
             descripcion,
             ciudad
           });
-          importedCount++;
         } else {
           database[existingIndex] = {
             guia,
@@ -390,21 +376,15 @@ async function handleFileImport(fileInput) {
             descripcion,
             ciudad: ciudad || database[existingIndex].ciudad || ''
           };
-          importedCount++;
         }
       }
 
       await saveToFirestore();
       loadData();
-      
-      if (errors.length > 0) {
-        alert(`Importadas ${importedCount} guías correctamente, pero con ${errors.length} errores en filas específicas.`);
-      } else {
-        alert(`Importadas ${importedCount} guías correctamente`);
-      }
+      alert(`Importadas ${jsonData.length - 1} guías correctamente`);
     } catch (error) {
       console.error("Error en importación:", error);
-      alert(`Error al importar: ${error.message}\n\nFormato esperado:\nColumna A: GUIA\nColumna B: MANIFIESTO\nColumna C: DESCRIPCION`);
+      alert("Error al importar. Verifica el formato del Excel.");
     } finally {
       hideLoading();
       fileInput.value = '';
