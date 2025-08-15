@@ -164,17 +164,17 @@ function loadData() {
     const ciudadCell = newRow.insertCell(3);
     ciudadCell.textContent = item.ciudad || '';
     
-    // Aplicar estilos consistentes
-    if (item.descripcion === "RETENER" && item.ciudad) {
+    // Aplicamos los estilos según el estado guardado
+    if (item.descripcion === "RETENER") {
       if (item.ciudad === "GYE") {
         descCell.className = 'retener-amarillo';
         ciudadCell.className = 'ciudad-amarilla';
       } else if (item.ciudad === "QUT") {
         descCell.className = 'retener-naranja';
         ciudadCell.className = 'ciudad-naranja';
+      } else {
+        descCell.className = 'retener';
       }
-    } else if (item.descripcion === "RETENER") {
-      descCell.className = 'retener';
     } else if (item.descripcion === "LIBERAR") {
       descCell.className = 'liberar';
       ciudadCell.className = 'liberar';
@@ -244,33 +244,36 @@ async function assignFromRow(button, guia) {
     const index = database.findIndex(item => item.guia === guia);
     
     if (index !== -1) {
-      // Actualizar tanto la ciudad como la descripción para mantener consistencia
+      // Actualizamos el objeto completo en la base de datos
       database[index] = {
-        ...database[index],
-        ciudad: ciudad,
-        descripcion: "RETENER" // Asegurar que mantenga el estado RETENER
+        guia: database[index].guia,
+        manifiesto: database[index].manifiesto,
+        descripcion: "RETENER", // Mantenemos como RETENER
+        ciudad: ciudad // Asignamos la nueva ciudad
       };
       
       try {
-        await saveToFirestore();
+        // Guardamos en Firestore
+        const success = await saveToFirestore();
         
-        const descCell = row.cells[2];
-        const ciudadCell = row.cells[3];
-        
-        ciudadCell.textContent = ciudad;
-
-        // Aplicar estilos según ciudad asignada
-        if(ciudad === 'GYE') {
-          descCell.className = 'retener-amarillo';
-          ciudadCell.className = 'ciudad-amarilla';
-        } else if(ciudad === 'QUT') {
-          descCell.className = 'retener-naranja';
-          ciudadCell.className = 'ciudad-naranja';
+        if (success) {
+          // Actualizamos la interfaz
+          const descCell = row.cells[2];
+          const ciudadCell = row.cells[3];
+          
+          ciudadCell.textContent = ciudad;
+          
+          if (ciudad === "GYE") {
+            descCell.className = 'retener-amarillo';
+            ciudadCell.className = 'ciudad-amarilla';
+          } else if (ciudad === "QUT") {
+            descCell.className = 'retener-naranja';
+            ciudadCell.className = 'ciudad-naranja';
+          }
         }
-        
       } catch (error) {
-        console.error("Error al guardar cambios:", error);
-        alert("Error al guardar los cambios. Intente nuevamente.");
+        console.error("Error al asignar:", error);
+        alert("Error al guardar la asignación. Intente nuevamente.");
       }
     }
   } else {
