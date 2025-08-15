@@ -145,36 +145,59 @@ function loadData() {
   
   database.forEach(item => {
     const newRow = tableBody.insertRow();
-    let descClass = '';
-    let ciudadClass = '';
     
-    // Mostrar siempre el valor de la ciudad (aunque esté vacío)
-    const ciudadValue = item.ciudad || ''; 
+    // Celda de descripción
+    const descCell = newRow.insertCell(2);
     
     if(item.descripcion === "RETENER") {
-      // Descripción SIEMPRE en rojo
-      descClass = 'retener';
+      // Creamos un contenedor para RETENER y ciudad
+      const container = document.createElement('div');
+      container.style.display = 'flex';
+      container.style.justifyContent = 'center';
+      container.style.gap = '5px';
       
-      // Ciudad siempre visible pero con fondo blanco inicialmente
-      ciudadClass = '';
+      // Elemento RETENER (siempre rojo)
+      const retenerSpan = document.createElement('span');
+      retenerSpan.style.color = 'red';
+      retenerSpan.style.fontWeight = 'bold';
+      retenerSpan.textContent = 'RETENER';
+      container.appendChild(retenerSpan);
       
-      // Solo aplicar color si está asignada explícitamente
-      if(item.ciudad && item.ciudad.trim() !== '') {
-        ciudadClass = item.ciudad === "GYE" ? 'retener-amarillo' : 'retener-naranja';
+      // Elemento ciudad (si existe)
+      if(item.ciudad && (item.ciudad === 'GYE' || item.ciudad === 'QUT')) {
+        const ciudadSpan = document.createElement('span');
+        ciudadSpan.style.backgroundColor = 'white';
+        ciudadSpan.style.padding = '2px 5px';
+        ciudadSpan.style.borderRadius = '3px';
+        ciudadSpan.textContent = item.ciudad;
+        ciudadSpan.id = 'ciudad-' + item.guia;
+        container.appendChild(ciudadSpan);
       }
-    }
-    else if(item.descripcion === "LIBERAR") {
-      descClass = 'liberar';
-      ciudadClass = 'liberar';
-    }
+      
+      descCell.appendChild(container);
+      
+      // Aplicar colores si ya está asignado
+      if(item.ciudad === 'GYE') {
+        retenerSpan.style.backgroundColor = '#eeff00';
+        descCell.querySelector('span:last-child').style.backgroundColor = '#eeff00';
+      } else if(item.ciudad === 'QUT') {
+        retenerSpan.style.backgroundColor = '#ff8800';
+        descCell.querySelector('span:last-child').style.backgroundColor = '#ff8800';
+      }
+    } else {
+      descCell.textContent = item.descripcion;
+      }
     
-    newRow.innerHTML = `
-      <td>${item.guia}</td>
-      <td>${item.manifiesto}</td>
-      <td class="${descClass}">${item.descripcion}</td>
-      <td class="${ciudadClass}">${ciudadValue}</td>
-      <td>${generateActionButtons(item.descripcion)}</td>
-    `;
+    // Resto de celdas (sin cambios)
+    newRow.insertCell(0).textContent = item.guia;
+    newRow.insertCell(1).textContent = item.manifiesto;
+    
+    // Celda de ciudad (la dejamos vacía porque ya la mostramos en descripción)
+    newRow.insertCell(3).textContent = '';
+    
+    // Celda de acciones (sin cambios)
+    const actionCell = newRow.insertCell(4);
+    actionCell.innerHTML = generateActionButtons(item.descripcion, item.guia);
   });
   updateCounter();
 }
@@ -234,19 +257,27 @@ async function assignFromRow(button) {
   
   if (manifestAssignments[manifiesto]) {
     const ciudad = manifestAssignments[manifiesto];
-    
     const index = database.findIndex(item => item.guia === guia);
+    
     if (index !== -1) {
-      // Actualizamos ambos: ciudad y manteniendo RETENER
-      database[index] = {
-        ...database[index],
-        ciudad: ciudad,
-        descripcion: "RETENER" // Aseguramos que siga siendo RETENER
-      };
+      database[index].ciudad = ciudad;
       
       try {
         await saveToFirestore();
-        loadData(); // Esto aplicará los colores correctamente
+        
+        // Actualizar los colores
+        const descCell = row.cells[2];
+        const retenerSpan = descCell.querySelector('span:first-child');
+        const ciudadSpan = descCell.querySelector('span:last-child');
+        
+        if(ciudad === 'GYE') {
+          retenerSpan.style.backgroundColor = '#eeff00';
+          if(ciudadSpan) ciudadSpan.style.backgroundColor = '#eeff00';
+        } else if(ciudad === 'QUT') {
+          retenerSpan.style.backgroundColor = '#ff8800';
+          if(ciudadSpan) ciudadSpan.style.backgroundColor = '#ff8800';
+        }
+        
       } catch (error) {
         console.error(error);
       }
