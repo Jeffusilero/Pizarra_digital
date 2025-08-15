@@ -60,7 +60,6 @@ function initAuthStateListener() {
       console.log("Usuario no autenticado");
       document.getElementById('mainContainer').style.display = 'none';
       
-      // Mostrar botón de login si no existe
       if (!document.getElementById('loginBtnContainer')) {
         const loginContainer = document.createElement('div');
         loginContainer.id = 'loginBtnContainer';
@@ -146,50 +145,50 @@ function loadData() {
   database.forEach(item => {
     const newRow = tableBody.insertRow();
     
-    // Celdas normales
+    // Celdas básicas
     newRow.insertCell(0).textContent = item.guia;
     newRow.insertCell(1).textContent = item.manifiesto;
     
-    // Celda RETENER (siempre roja)
-    const retenerCell = newRow.insertCell(2);
-    retenerCell.textContent = item.descripcion;
+    // Celda RETENER
+    const descCell = newRow.insertCell(2);
+    descCell.textContent = item.descripcion;
     if(item.descripcion === "RETENER") {
-      retenerCell.className = 'retener';
+      descCell.className = 'retener';
     }
     
-    // Celda CIUDAD (siempre visible si existe)
+    // Celda CIUDAD - SIEMPRE visible si existe
     const ciudadCell = newRow.insertCell(3);
-    if(item.ciudad) {
+    if(item.ciudad && (item.ciudad === 'GYE' || item.ciudad === 'QUT')) {
       ciudadCell.textContent = item.ciudad;
-      ciudadCell.className = 'ciudad-blanca'; // Nueva clase
+      ciudadCell.className = 'ciudad-blanca';
+    }
+    
+    // Si ya está asignado, aplicar colores
+    if(item.ciudad && item.descripcion === "RETENER") {
+      if(item.ciudad === "GYE") {
+        descCell.classList.add('retener-amarillo');
+        ciudadCell.classList.add('retener-amarillo');
+      } else if(item.ciudad === "QUT") {
+        descCell.classList.add('retener-naranja');
+        ciudadCell.classList.add('retener-naranja');
+      }
     }
     
     // Celda ACCIONES
     const actionCell = newRow.insertCell(4);
     actionCell.innerHTML = generateActionButtons(item.descripcion, item.guia);
-    
-    // Si ya está asignado, aplicar colores
-    if(item.ciudad && item.descripcion === "RETENER") {
-      if(item.ciudad === "GYE") {
-        retenerCell.classList.add('retener-amarillo');
-        ciudadCell.classList.add('retener-amarillo');
-      } else if(item.ciudad === "QUT") {
-        retenerCell.classList.add('retener-naranja');
-        ciudadCell.classList.add('retener-naranja');
-      }
-    }
   });
   updateCounter();
 }
 
-function generateActionButtons(descripcion) {
+function generateActionButtons(descripcion, guia) {
   if (descripcion === "RETENER") {
     return `
       <div class="action-buttons">
         <div class="action-trigger">
           <button class="btn-action btn-blue" onclick="toggleActionMenu(this)">Acción</button>
           <div class="action-menu">
-            <button class="btn-action btn-light-blue" onclick="assignFromRow(this)">Asignar</button>
+            <button class="btn-action btn-light-blue" onclick="assignFromRow(this, '${guia}')">Asignar</button>
             <button class="btn-action btn-green" onclick="liberarFromRow(this)">Liberar</button>
           </div>
         </div>
@@ -230,9 +229,8 @@ function closeEditModal() {
 /*****************************
  * FUNCIONES DE OPERACIONES *
  *****************************/
-async function assignFromRow(button) {
+async function assignFromRow(button, guia) {
   const row = button.closest('tr');
-  const guia = row.cells[0].textContent;
   const manifiesto = row.cells[1].textContent;
   
   if (manifestAssignments[manifiesto]) {
@@ -245,24 +243,22 @@ async function assignFromRow(button) {
       try {
         await saveToFirestore();
         
-        // Actualizar visualización
-        const retenerCell = row.cells[2];
+        // Obtener celdas
+        const descCell = row.cells[2];
         const ciudadCell = row.cells[3];
         
-        // Resetear clases
-        retenerCell.className = 'retener';
+        // Asegurar que la ciudad sea visible
+        ciudadCell.textContent = ciudad;
         ciudadCell.className = 'ciudad-blanca';
         
-        // Aplicar nuevos colores
+        // Aplicar colores según ciudad
         if(ciudad === 'GYE') {
-          retenerCell.classList.add('retener-amarillo');
+          descCell.className = 'retener retener-amarillo';
           ciudadCell.classList.add('retener-amarillo');
         } else if(ciudad === 'QUT') {
-          retenerCell.classList.add('retener-naranja');
+          descCell.className = 'retener retener-naranja';
           ciudadCell.classList.add('retener-naranja');
         }
-        
-        ciudadCell.textContent = ciudad;
         
       } catch (error) {
         console.error(error);
@@ -284,10 +280,8 @@ async function assignManifest() {
     return;
   }
 
-  // Asignar ciudad al manifiesto
   manifestAssignments[manifiesto] = ciudad;
   
-  // Actualizar ciudad en la base de datos para los items RETENER de este manifiesto
   database.forEach(item => {
     if (item.manifiesto === manifiesto && item.descripcion === "RETENER") {
       item.ciudad = ciudad;
@@ -311,26 +305,20 @@ async function addItem() {
     return;
   }
 
-  // Agregar el nuevo item
   database.push({
     guia: guia,
     manifiesto: manifiesto,
     descripcion: descripcion,
-    ciudad: '' // Ciudad vacía inicialmente
+    ciudad: ''
   });
   
   try {
     await saveToFirestore();
     loadData();
-    
-    // Limpiar campos del modal
     document.getElementById('add-guia').value = '';
     document.getElementById('add-manifiesto').value = '';
     document.getElementById('add-descripcion').value = '';
-    
-    // Cerrar el modal
     closeAddModal();
-    
   } catch (error) {
     console.error("Error al agregar:", error);
     alert("Error al agregar el item. Intente nuevamente.");
@@ -360,7 +348,6 @@ async function handleFileImport(fileInput) {
         
         if (!guia || !manifiesto || !descripcion) continue;
 
-        // Ciudad siempre vacía al importar para RETENER
         const ciudad = descripcion === "RETENER" ? '' : (database.find(item => item.guia === guia)?.ciudad || '');
 
         const existingIndex = database.findIndex(item => item.guia === guia);
@@ -420,12 +407,11 @@ async function liberarFromRow(button) {
   
   const index = database.findIndex(item => item.guia === guia);
   if(index !== -1) {
-    // Conservamos la ciudad existente al liberar
     const ciudadActual = database[index].ciudad;
     database[index] = {
       ...database[index],
       descripcion: "LIBERAR",
-      ciudad: ciudadActual // Mantenemos la ciudad que ya tenía
+      ciudad: ciudadActual
     };
     
     try {
@@ -496,4 +482,4 @@ document.addEventListener('click', function(e) {
 
 document.addEventListener('DOMContentLoaded', () => {
   initAuthStateListener();
-}); 
+});
