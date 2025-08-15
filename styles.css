@@ -55,12 +55,7 @@ td {
   font-weight: bold;
 }
 
-/* Ciudad inicial (blanca con texto negro) */
-.ciudad-blanca {
-  background-color: white !important;
-  color: black !important;
-  font-weight: bold;
-}
+
 
 /* Asignado a GYE - Amarillo */
 .retener-amarillo {
