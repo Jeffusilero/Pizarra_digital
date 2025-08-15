@@ -180,10 +180,10 @@ function loadData() {
         // Aplicar colores según ciudad
         if(ciudad === "GYE") {
           descCell.classList.add('retener-amarillo');
-          ciudadCell.classList.add('retener-amarillo');
+          ciudadCell.classList.add('ciudad-amarilla');
         } else if(ciudad === "QUT") {
           descCell.classList.add('retener-naranja');
-          ciudadCell.classList.add('retener-naranja');
+          ciudadCell.classList.add('ciudad-naranja');
         }
       }
     } else {
@@ -266,15 +266,15 @@ async function assignFromRow(button, guia) {
         
         // Asegurar que la ciudad sea visible
         ciudadCell.textContent = ciudad;
-        ciudadCell.className = 'ciudad-blanca';
+
         
         // Aplicar colores según ciudad
         if(ciudad === 'GYE') {
           descCell.className = 'retener retener-amarillo';
-          ciudadCell.classList.add('retener-amarillo');
+          ciudadCell.classList.add('ciudad-amarilla');
         } else if(ciudad === 'QUT') {
           descCell.className = 'retener retener-naranja';
-          ciudadCell.classList.add('retener-naranja');
+          ciudadCell.classList.add('ciudad-naranja');
         }
         
       } catch (error) {

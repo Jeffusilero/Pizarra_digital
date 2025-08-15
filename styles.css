@@ -48,31 +48,43 @@ td {
   overflow: visible;   /* Permite que el texto sea visible */
 }
 
-/* RETENER (descripción) - Rojo con texto negro */
+/* RETENER (descripción) - Rojo con texto blanco */
 .retener {
-  background-color: #ff4444 !important;
-  color: #f6f8fa !important;
+  background-color: #ff4444 !important; /* Fondo rojo */
+  color: white !important; /* Texto blanco */
   font-weight: bold;
 }
 
-/* Ciudad inicial (blanca con texto negro) */
+/* Ciudad inicial (sin fondo, texto negro) */
 .ciudad-blanca {
-  background-color: white !important;
-  color: black !important;
+  background-color: transparent !important; /* Sin fondo */
+  color: black !important; /* Texto negro */
   font-weight: bold;
 }
 
 /* Asignado a GYE - Amarillo */
 .retener-amarillo {
-  background-color: #eeff00 !important;
-  color: black !important;
+  background-color: #eeff00 !important; /* Fondo amarillo */
+  color: black !important; /* Texto negro */
+  font-weight: bold;
+}
+
+.ciudad-amarilla {
+  background-color: #eeff00 !important; /* Fondo amarillo */
+  color: black !important; /* Texto negro */
   font-weight: bold;
 }
 
 /* Asignado a QUT - Naranja */
 .retener-naranja {
-  background-color: #ff8800 !important;
-  color: black !important;
+  background-color: #ff8800 !important; /* Fondo naranja */
+  color: black !important; /* Texto negro */
+  font-weight: bold;
+}
+
+.ciudad-naranja {
+  background-color: #ff8800 !important; /* Fondo naranja */
+  color: black !important; /* Texto negro */
   font-weight: bold;
 }
 
