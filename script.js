@@ -325,7 +325,7 @@ async function addItem() {
     guia: guia,
     manifiesto: manifiesto,
     descripcion: descripcion,
-    ciudad: ciudad
+    ciudad: ciudad,
   });
   
   // ... resto del código ...
