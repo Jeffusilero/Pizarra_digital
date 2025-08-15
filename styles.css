@@ -65,7 +65,7 @@ td {
 /* Asignado a GYE - Amarillo */
 .retener-amarillo {
   background-color: #fa0000 !important; /* Fondo amarillo */
-  color: black !important; /* Texto negro */
+  color: WHITE !important; /* Texto negro */
   font-weight: bold;
 }
 
