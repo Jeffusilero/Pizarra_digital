@@ -98,9 +98,6 @@ async function loadAppData() {
 
 async function loadFromFirestore() {
   try {
-    const user = auth.currentUser;
-    if (!user) throw new Error("Usuario no autenticado");
-    
     const doc = await db.collection("pizarra").doc("datos").get();
     
     if (!doc.exists) {
@@ -113,12 +110,13 @@ async function loadFromFirestore() {
     
     const data = doc.data();
     
-    // Sincronizar ciudades en la base de datos con las asignaciones de manifiestos
+    // Sincronizar TODOS los items con manifest
     if (data.database && data.manifest) {
-      data.database.forEach(item => {
-        if (item.descripcion === "RETENER" && !item.ciudad && data.manifest[item.manifiesto]) {
-          item.ciudad = data.manifest[item.manifiesto];
+      data.database = data.database.map(item => {
+        if (data.manifest[item.manifiesto]) {
+          return { ...item, ciudad: data.manifest[item.manifiesto] };
         }
+        return item;
       });
     }
     
@@ -157,34 +155,28 @@ function loadData() {
   database.forEach(item => {
     const newRow = tableBody.insertRow();
     
+    // Celdas básicas
     newRow.insertCell(0).textContent = item.guia;
     newRow.insertCell(1).textContent = item.manifiesto;
     
+    // Celda de descripción
     const descCell = newRow.insertCell(2);
     descCell.textContent = item.descripcion;
     
+    // Celda de ciudad
     const ciudadCell = newRow.insertCell(3);
     ciudadCell.textContent = item.ciudad || '';
     
-    // Aplicar estilos según el estado
-    if(item.descripcion === "RETENER") {
-      // Estado inicial - Rojo con texto blanco
+    // Aplicar estilos iniciales
+    if (item.descripcion === "RETENER") {
       descCell.className = 'retener';
-      
-      // Si tiene ciudad asignada, aplicar el color correspondiente
-      if(item.ciudad) {
-        if(item.ciudad === "GYE") {
-          descCell.className = 'retener retener-amarillo';
-          ciudadCell.className = 'ciudad-amarilla';
-        } else if(item.ciudad === "QUT") {
-          descCell.className = 'retener retener-naranja';
-          ciudadCell.className = 'ciudad-naranja';
-        }
-      }
-    } else if(item.descripcion === "LIBERAR") {
+      ciudadCell.className = '';
+    } else if (item.descripcion === "LIBERAR") {
       descCell.className = 'liberar';
+      ciudadCell.className = 'liberar';
     }
     
+    // Acciones
     const actionCell = newRow.insertCell(4);
     actionCell.innerHTML = generateActionButtons(item.descripcion, item.guia);
   });
@@ -243,38 +235,34 @@ function closeEditModal() {
 async function assignFromRow(button, guia) {
   const row = button.closest('tr');
   const manifiesto = row.cells[1].textContent;
+  const index = database.findIndex(item => item.guia === guia);
   
-  if (manifestAssignments[manifiesto]) {
+  if (index !== -1 && manifestAssignments[manifiesto]) {
     const ciudad = manifestAssignments[manifiesto];
-    const index = database.findIndex(item => item.guia === guia);
+    database[index].ciudad = ciudad;
     
-    if (index !== -1) {
-      database[index].ciudad = ciudad;
+    try {
+      await saveToFirestore();
       
-      try {
-        await saveToFirestore();
-        
-        // Actualizar celdas
-        const descCell = row.cells[2];
-        const ciudadCell = row.cells[3];
-        
-        ciudadCell.textContent = ciudad;
-
-        // Aplicar estilos según ciudad
-        if(ciudad === 'GYE') {
-          descCell.className = 'retener retener-amarillo';
-          ciudadCell.className = 'ciudad-amarilla';
-        } else if(ciudad === 'QUT') {
-          descCell.className = 'retener retener-naranja';
-          ciudadCell.className = 'ciudad-naranja';
-        }
-        
-      } catch (error) {
-        console.error(error);
+      const descCell = row.cells[2];
+      const ciudadCell = row.cells[3];
+      
+      ciudadCell.textContent = ciudad;
+      
+      // Aplicar estilos de asignación
+      if (ciudad === "GYE") {
+        descCell.className = 'retener-amarillo';
+        ciudadCell.className = 'ciudad-amarilla';
+      } else if (ciudad === "QUT") {
+        descCell.className = 'retener-naranja';
+        ciudadCell.className = 'ciudad-naranja';
       }
+      
+    } catch (error) {
+      console.error("Error al asignar:", error);
     }
   } else {
-    alert('Este manifiesto no tiene ciudad asignada. Use el botón "Asignar Manifiesto" primero.');
+    alert('Manifiesto no tiene ciudad asignada. Use "Asignar Manifiesto" primero.');
   }
   
   toggleActionMenu(button.closest('.action-trigger').querySelector('button'));
@@ -315,8 +303,8 @@ async function addItem() {
   }
 
   // Obtener ciudad asignada al manifiesto (si existe y es RETENER)
-  const ciudad = (descripcion === "RETENER" && manifestAssignments[manifiesto]) ? manifestAssignments[manifiesto] : '';
-
+  const ciudad = manifestAssignments[manifiesto] || '';
+  
   database.push({
     guia: guia,
     manifiesto: manifiesto,
@@ -361,25 +349,24 @@ async function handleFileImport(fileInput) {
         if (!guia || !manifiesto || !descripcion) continue;
 
         // Obtener ciudad asignada al manifiesto (si existe y es RETENER)
-        const ciudad = (descripcion === "RETENER" && manifestAssignments[manifiesto]) ? manifestAssignments[manifiesto] : '';
-
-        const existingIndex = database.findIndex(item => item.guia === guia);
-
-        if (existingIndex === -1) {
-          database.push({
-            guia,
-            manifiesto,
-            descripcion,
-            ciudad
-          });
-        } else {
-          database[existingIndex] = {
-            guia,
-            manifiesto,
-            descripcion,
-            ciudad: ciudad || database[existingIndex].ciudad || ''
-          };
-        }
+      // Dentro del bucle donde procesas cada fila:
+      const ciudad = manifestAssignments[manifiesto] || '';
+      
+      if (existingIndex === -1) {
+        database.push({
+          guia,
+          manifiesto,
+          descripcion,
+          ciudad
+        });
+      } else {
+        database[existingIndex] = {
+          guia,
+          manifiesto,
+          descripcion,
+          ciudad: ciudad || database[existingIndex].ciudad || ''
+        };
+      }
       }
 
       await saveToFirestore();
@@ -419,20 +406,18 @@ async function liberarFromRow(button) {
   const guia = row.cells[0].textContent;
   
   const index = database.findIndex(item => item.guia === guia);
-  if(index !== -1) {
-    const ciudadActual = database[index].ciudad;
+  if (index !== -1) {
     database[index] = {
       ...database[index],
       descripcion: "LIBERAR",
-      ciudad: ciudadActual
+      ciudad: database[index].ciudad || '' // Mantener la ciudad si existe
     };
     
     try {
       await saveToFirestore();
       loadData();
     } catch (error) {
-      alert('Error al liberar el item');
-      console.error(error);
+      console.error("Error al liberar:", error);
     }
   }
   

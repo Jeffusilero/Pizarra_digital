@@ -48,45 +48,56 @@ td {
   overflow: visible;
 }
 
-/* RETENER (descripción) - Rojo con texto blanco (estado inicial) */
+/* ESTADO INICIAL - RETENER (descripción) */
 .retener {
-  background-color: #ff0000 !important;
-  color: white !important;
+  background-color: #ff0000 !important; /* Fondo rojo */
+  color: white !important;             /* Texto blanco */
   font-weight: bold;
 }
 
-/* Asignado a GYE - Descripción amarilla con texto negro */
+/* CIUDAD SIN ASIGNAR (estado inicial) */
+.ciudad-sin-asignar {
+  background-color: white !important;  /* Fondo blanco */
+  color: black !important;            /* Texto negro */
+}
+
+/* RETENER ASIGNADO A GYE */
 .retener-amarillo {
-  background-color: #ffff00 !important;
-  color: black !important;
+  background-color: #ffff00 !important; /* Fondo amarillo */
+  color: black !important;             /* Texto negro */
   font-weight: bold;
 }
 
-/* Asignado a QUT - Descripción naranja con texto blanco */
-.retener-naranja {
-  background-color: #ffa500 !important;
-  color: white !important;
-  font-weight: bold;
-}
-
-/* Ciudad asignada a GYE - Amarillo con texto negro */
 .ciudad-amarilla {
-  background-color: #ffff00 !important;
-  color: black !important;
+  background-color: #ffff00 !important; /* Fondo amarillo */
+  color: black !important;             /* Texto negro */
   font-weight: bold;
 }
 
-/* Ciudad asignada a QUT - Naranja con texto blanco */
+/* RETENER ASIGNADO A QUT */
+.retener-naranja {
+  background-color: #ffa500 !important; /* Fondo naranja */
+  color: white !important;             /* Texto blanco */
+  font-weight: bold;
+}
+
 .ciudad-naranja {
-  background-color: #ffa500 !important;
-  color: white !important;
+  background-color: #ffa500 !important; /* Fondo naranja */
+  color: white !important;             /* Texto blanco */
   font-weight: bold;
 }
 
-/* LIBERAR - Verde */
+/* ESTADO LIBERAR */
 .liberar {
-  background-color: #00C851 !important;
-  color: white !important;
+  background-color: #00C851 !important; /* Fondo verde */
+  color: white !important;             /* Texto blanco */
+  font-weight: bold;
+}
+
+.ciudad-liberada {
+  background-color: #00C851 !important; /* Fondo verde */
+  color: white !important;             /* Texto blanco */
+  font-weight: bold;
 }
 
 /* Botones de acción */
