@@ -12,7 +12,7 @@ body {
 .container {
   width: 70%;
   max-width: 1200px;
-  display: none; /* Oculto inicialmente hasta autenticación */
+  display: none;
 }
 
 h2 {
@@ -40,7 +40,7 @@ th {
   font-weight: bold;
 }
 
-/* Celda normal (fondo blanco) */
+/* Celda normal */
 td {
   background-color: transparent;
   color: black;
@@ -55,34 +55,18 @@ td {
   font-weight: bold;
 }
 
-/* Ciudad inicial (sin fondo, texto negro) */
-.ciudad-blanca {
-  background-color: transparent !important;
+/* Asignado a GYE - Ambas celdas amarillas con texto negro */
+.retener-amarillo, .ciudad-amarilla {
+  background-color: #ffff00 !important;
   color: black !important;
+  font-weight: bold;
 }
 
-/* Asignado a GYE - Amarillo */
-.retener-amarillo {
-  background-color: #f5222d !important;
+/* Asignado a QUT - Ambas celdas naranja con texto blanco */
+.retener-naranja, .ciudad-naranja {
+  background-color: #ffa500 !important;
   color: white !important;
   font-weight: bold;
-}
-
-.ciudad-amarilla {
-  background-color: none !important;
-  color: black !important;
-}
-
-/* Asignado a QUT - Naranja */
-.retener-naranja {
-  background-color: #ffa500 !important;
-  color: black !important;
-  font-weight: bold;
-}
-
-.ciudad-naranja {
-  background-color: #ffa500 !important;
-  color: black !important;
 }
 
 /* LIBERAR - Verde */

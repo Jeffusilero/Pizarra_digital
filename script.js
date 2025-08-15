@@ -128,6 +128,7 @@ async function loadFromFirestore() {
     throw error;
   }
 }
+
 async function saveToFirestore() {
   showLoading();
   try {
@@ -156,44 +157,38 @@ function loadData() {
   database.forEach(item => {
     const newRow = tableBody.insertRow();
     
-    // Celdas básicas
     newRow.insertCell(0).textContent = item.guia;
     newRow.insertCell(1).textContent = item.manifiesto;
     
-    // Celda RETENER
     const descCell = newRow.insertCell(2);
     descCell.textContent = item.descripcion;
     
-    // Celda CIUDAD
     const ciudadCell = newRow.insertCell(3);
     
     if(item.descripcion === "RETENER") {
-      // Estilo base para RETENER (fondo rojo, letra blanca)
+      // Estado inicial
       descCell.className = 'retener';
       
-      // Verificar si hay ciudad asignada (directa o por manifiesto)
       const ciudad = item.ciudad || manifestAssignments[item.manifiesto];
       
       if(ciudad) {
         ciudadCell.textContent = ciudad;
         
-        // Aplicar colores según ciudad
+        // Aplicar mismos estilos a ambas celdas
         if(ciudad === "GYE") {
-          descCell.classList.add('retener-amarillo');
+          descCell.className = 'retener retener-amarillo';
           ciudadCell.className = 'ciudad-amarilla';
         } else if(ciudad === "QUT") {
-          descCell.classList.add('retener-naranja');
+          descCell.className = 'retener retener-naranja';
           ciudadCell.className = 'ciudad-naranja';
         }
       } else {
-        // Si no tiene ciudad asignada, mantener estilo base
         ciudadCell.textContent = '';
       }
     } else {
       ciudadCell.textContent = item.ciudad || '';
     }
     
-    // Celda ACCIONES
     const actionCell = newRow.insertCell(4);
     actionCell.innerHTML = generateActionButtons(item.descripcion, item.guia);
   });
@@ -270,14 +265,13 @@ async function assignFromRow(button, guia) {
         // Asegurar que la ciudad sea visible
         ciudadCell.textContent = ciudad;
 
-        
-        // Aplicar colores según ciudad
+        // Aplicar mismos estilos a ambas celdas según ciudad
         if(ciudad === 'GYE') {
           descCell.className = 'retener retener-amarillo';
-          ciudadCell.classList.add('ciudad-amarilla');
+          ciudadCell.className = 'ciudad-amarilla';
         } else if(ciudad === 'QUT') {
           descCell.className = 'retener retener-naranja';
-          ciudadCell.classList.add('ciudad-naranja');
+          ciudadCell.className = 'ciudad-naranja';
         }
         
       } catch (error) {
