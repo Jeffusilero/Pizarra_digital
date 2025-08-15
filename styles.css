@@ -57,7 +57,7 @@ td {
 
 /* Ciudad inicial (blanca con texto negro) */
 .ciudad-blanca {
-  background-color: none !important;
+  background-color: white !important;
   color: black !important;
   font-weight: bold;
 }
