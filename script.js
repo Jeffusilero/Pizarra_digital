@@ -153,24 +153,24 @@ function loadData() {
     const descCell = newRow.insertCell(2);
     descCell.textContent = item.descripcion;
     if(item.descripcion === "RETENER") {
-      descCell.className = 'retener'; 
+      descCell.className = 'retener';
     }
     
     // Celda CIUDAD - SIEMPRE visible si existe
     const ciudadCell = newRow.insertCell(3);
-    if(item.ciudad && (item.ciudad === 'GYE' || item.ciudad === 'QUT')) {
+    if(item.ciudad) {
       ciudadCell.textContent = item.ciudad;
       ciudadCell.className = 'ciudad-blanca';
-    }
-    
-    // Si ya está asignado, aplicar colores
-    if(item.ciudad && item.descripcion === "RETENER") {
-      if(item.ciudad === "GYE") {
-        descCell.classList.add('retener-amarillo');
-        ciudadCell.classList.add('retener-amarillo');
-      } else if(item.ciudad === "QUT") {
-        descCell.classList.add('retener-naranja');
-        ciudadCell.classList.add('retener-naranja');
+      
+      // Aplicar color si está asignada
+      if(item.descripcion === "RETENER") {
+        if(item.ciudad === "GYE") {
+          descCell.classList.add('retener-amarillo');
+          ciudadCell.classList.add('retener-amarillo');
+        } else if(item.ciudad === "QUT") {
+          descCell.classList.add('retener-naranja');
+          ciudadCell.classList.add('retener-naranja');
+        }
       }
     }
     
