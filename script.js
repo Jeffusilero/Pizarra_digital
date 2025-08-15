@@ -457,7 +457,7 @@ function filterTable() {
       tr[i].style.display = txtValue.toUpperCase().indexOf(filter) > -1 ? "" : "none";
     }       
   }
-}
+} 
 
 /*****************************
  * EVENT LISTENERS *
