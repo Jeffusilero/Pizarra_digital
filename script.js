@@ -164,29 +164,25 @@ function loadData() {
     descCell.textContent = item.descripcion;
     
     const ciudadCell = newRow.insertCell(3);
+    ciudadCell.textContent = item.ciudad || '';
     
+    // Aplicar estilos según el estado
     if(item.descripcion === "RETENER") {
-      // Estado inicial
+      // Estado inicial - Rojo con texto blanco
       descCell.className = 'retener';
       
-      const ciudad = item.ciudad || manifestAssignments[item.manifiesto];
-      
-      if(ciudad) {
-        ciudadCell.textContent = ciudad;
-        
-        // Aplicar mismos estilos a ambas celdas
-        if(ciudad === "GYE") {
+      // Si tiene ciudad asignada, aplicar el color correspondiente
+      if(item.ciudad) {
+        if(item.ciudad === "GYE") {
           descCell.className = 'retener retener-amarillo';
           ciudadCell.className = 'ciudad-amarilla';
-        } else if(ciudad === "QUT") {
+        } else if(item.ciudad === "QUT") {
           descCell.className = 'retener retener-naranja';
           ciudadCell.className = 'ciudad-naranja';
         }
-      } else {
-        ciudadCell.textContent = '';
       }
-    } else {
-      ciudadCell.textContent = item.ciudad || '';
+    } else if(item.descripcion === "LIBERAR") {
+      descCell.className = 'liberar';
     }
     
     const actionCell = newRow.insertCell(4);
@@ -258,14 +254,13 @@ async function assignFromRow(button, guia) {
       try {
         await saveToFirestore();
         
-        // Obtener celdas
+        // Actualizar celdas
         const descCell = row.cells[2];
         const ciudadCell = row.cells[3];
         
-        // Asegurar que la ciudad sea visible
         ciudadCell.textContent = ciudad;
 
-        // Aplicar mismos estilos a ambas celdas según ciudad
+        // Aplicar estilos según ciudad
         if(ciudad === 'GYE') {
           descCell.className = 'retener retener-amarillo';
           ciudadCell.className = 'ciudad-amarilla';
@@ -319,7 +314,7 @@ async function addItem() {
     return;
   }
 
-  // Obtener ciudad asignada al manifiesto (si existe)
+  // Obtener ciudad asignada al manifiesto (si existe y es RETENER)
   const ciudad = (descripcion === "RETENER" && manifestAssignments[manifiesto]) ? manifestAssignments[manifiesto] : '';
 
   database.push({

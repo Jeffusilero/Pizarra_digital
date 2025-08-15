@@ -55,15 +55,29 @@ td {
   font-weight: bold;
 }
 
-/* Asignado a GYE - Ambas celdas amarillas con texto negro */
-.retener-amarillo, .ciudad-amarilla {
+/* Asignado a GYE - Descripción amarilla con texto negro */
+.retener-amarillo {
   background-color: #ffff00 !important;
   color: black !important;
   font-weight: bold;
 }
 
-/* Asignado a QUT - Ambas celdas naranja con texto blanco */
-.retener-naranja, .ciudad-naranja {
+/* Asignado a QUT - Descripción naranja con texto blanco */
+.retener-naranja {
+  background-color: #ffa500 !important;
+  color: white !important;
+  font-weight: bold;
+}
+
+/* Ciudad asignada a GYE - Amarillo con texto negro */
+.ciudad-amarilla {
+  background-color: #ffff00 !important;
+  color: black !important;
+  font-weight: bold;
+}
+
+/* Ciudad asignada a QUT - Naranja con texto blanco */
+.ciudad-naranja {
   background-color: #ffa500 !important;
   color: white !important;
   font-weight: bold;
