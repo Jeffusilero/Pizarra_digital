@@ -3,6 +3,7 @@
  **************************************/
 let database = [];
 let manifestAssignments = {};
+let currentEditingRow = null;
 
 // Configuración de Firebase
 const firebaseConfig = {
@@ -52,9 +53,11 @@ function logoutUser() {
 function initAuthStateListener() {
   auth.onAuthStateChanged(user => {
     if (user) {
+      console.log("Usuario autenticado:", user.email);
       document.getElementById('mainContainer').style.display = 'block';
       loadAppData();
     } else {
+      console.log("Usuario no autenticado");
       document.getElementById('mainContainer').style.display = 'none';
       
       if (!document.getElementById('loginBtnContainer')) {
@@ -125,7 +128,6 @@ async function loadFromFirestore() {
     throw error;
   }
 }
-
 async function saveToFirestore() {
   showLoading();
   try {
@@ -133,9 +135,10 @@ async function saveToFirestore() {
       database: database,
       manifest: manifestAssignments
     }, { merge: true });
+    console.log("Datos guardados correctamente");
     return true;
   } catch (error) {
-    console.error("Error Firestore:", error);
+    console.error("Error Firestore:", error.code, error.message);
     alert(`Error al guardar: ${error.message}`);
     return false;
   } finally {
@@ -165,28 +168,23 @@ function loadData() {
     const ciudadCell = newRow.insertCell(3);
     
     if(item.descripcion === "RETENER") {
-      // Aplicar estilo base para RETENER
       descCell.className = 'retener';
       
-      // Verificar si hay ciudad asignada
+      // Verificar si hay ciudad asignada (directa o por manifiesto)
       const ciudad = item.ciudad || manifestAssignments[item.manifiesto];
       
       if(ciudad) {
         ciudadCell.textContent = ciudad;
+        ciudadCell.className = 'ciudad-blanca';
         
         // Aplicar colores según ciudad
         if(ciudad === "GYE") {
           descCell.classList.add('retener-amarillo');
-          ciudadCell.className = 'ciudad-amarilla';
+          ciudadCell.classList.add('ciudad-amarilla');
         } else if(ciudad === "QUT") {
           descCell.classList.add('retener-naranja');
-          ciudadCell.className = 'ciudad-naranja';
-        } else {
-          ciudadCell.className = 'ciudad-blanca';
+          ciudadCell.classList.add('ciudad-naranja');
         }
-      } else {
-        ciudadCell.textContent = '';
-        ciudadCell.className = 'ciudad-blanca';
       }
     } else {
       ciudadCell.textContent = item.ciudad || '';
@@ -204,15 +202,20 @@ function generateActionButtons(descripcion, guia) {
   if (descripcion === "RETENER") {
     return `
       <div class="action-buttons">
-        <button class="btn-action btn-blue" onclick="assignFromRow('${guia}')">Asignar</button>
-        <button class="btn-action btn-green" onclick="liberarFromRow('${guia}')">Liberar</button>
-        <button class="btn-action btn-gray" onclick="deleteItem('${guia}')">Eliminar</button>
+        <div class="action-trigger">
+          <button class="btn-action btn-blue" onclick="toggleActionMenu(this)">Acción</button>
+          <div class="action-menu">
+            <button class="btn-action btn-light-blue" onclick="assignFromRow(this, '${guia}')">Asignar</button>
+            <button class="btn-action btn-green" onclick="liberarFromRow(this)">Liberar</button>
+          </div>
+        </div>
+        <button class="btn-action btn-gray" onclick="deleteItem(this)">Eliminar</button>
       </div>
     `;
   }
   return `
     <div class="action-buttons">
-      <button class="btn-action btn-gray" onclick="deleteItem('${guia}')">Eliminar</button>
+      <button class="btn-action btn-gray" onclick="deleteItem(this)">Eliminar</button>
     </div>
   `;
 }
@@ -236,20 +239,53 @@ function closeAssignModal() {
   document.getElementById('assignModal').style.display = 'none';
 }
 
+function closeEditModal() {
+  document.getElementById('editModal').style.display = 'none';
+}
+
 /*****************************
  * FUNCIONES DE OPERACIONES *
  *****************************/
-async function assignFromRow(guia) {
-  const item = database.find(item => item.guia === guia);
-  if (!item) return;
+async function assignFromRow(button, guia) {
+  const row = button.closest('tr');
+  const manifiesto = row.cells[1].textContent;
   
-  if (manifestAssignments[item.manifiesto]) {
-    item.ciudad = manifestAssignments[item.manifiesto];
-    await saveToFirestore();
-    loadData();
+  if (manifestAssignments[manifiesto]) {
+    const ciudad = manifestAssignments[manifiesto];
+    const index = database.findIndex(item => item.guia === guia);
+    
+    if (index !== -1) {
+      database[index].ciudad = ciudad;
+      
+      try {
+        await saveToFirestore();
+        
+        // Obtener celdas
+        const descCell = row.cells[2];
+        const ciudadCell = row.cells[3];
+        
+        // Asegurar que la ciudad sea visible
+        ciudadCell.textContent = ciudad;
+
+        
+        // Aplicar colores según ciudad
+        if(ciudad === 'GYE') {
+          descCell.className = 'retener retener-amarillo';
+          ciudadCell.classList.add('ciudad-amarilla');
+        } else if(ciudad === 'QUT') {
+          descCell.className = 'retener retener-naranja';
+          ciudadCell.classList.add('ciudad-naranja');
+        }
+        
+      } catch (error) {
+        console.error(error);
+      }
+    }
   } else {
     alert('Este manifiesto no tiene ciudad asignada. Use el botón "Asignar Manifiesto" primero.');
   }
+  
+  toggleActionMenu(button.closest('.action-trigger').querySelector('button'));
 }
 
 async function assignManifest() {
@@ -286,11 +322,14 @@ async function addItem() {
     return;
   }
 
+  // Obtener ciudad asignada al manifiesto (si existe)
+  const ciudad = (descripcion === "RETENER" && manifestAssignments[manifiesto]) ? manifestAssignments[manifiesto] : '';
+
   database.push({
     guia: guia,
     manifiesto: manifiesto,
     descripcion: descripcion,
-    ciudad: (descripcion === "RETENER" && manifestAssignments[manifiesto]) ? manifestAssignments[manifiesto] : ''
+    ciudad: ciudad
   });
   
   try {
@@ -306,24 +345,95 @@ async function addItem() {
   }
 }
 
-async function deleteItem(guia) {
+async function handleFileImport(fileInput) {
+  const file = fileInput.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    showLoading();
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+      for (let i = 1; i < jsonData.length; i++) {
+        const rowData = jsonData[i];
+        if (!rowData || rowData.length < 3) continue;
+
+        const guia = (rowData[0]?.toString() || '').trim();
+        const manifiesto = (rowData[1]?.toString() || '').trim();
+        const descripcion = (rowData[2]?.toString() || '').trim().toUpperCase();
+        
+        if (!guia || !manifiesto || !descripcion) continue;
+
+        // Obtener ciudad asignada al manifiesto (si existe y es RETENER)
+        const ciudad = (descripcion === "RETENER" && manifestAssignments[manifiesto]) ? manifestAssignments[manifiesto] : '';
+
+        const existingIndex = database.findIndex(item => item.guia === guia);
+
+        if (existingIndex === -1) {
+          database.push({
+            guia,
+            manifiesto,
+            descripcion,
+            ciudad
+          });
+        } else {
+          database[existingIndex] = {
+            guia,
+            manifiesto,
+            descripcion,
+            ciudad: ciudad || database[existingIndex].ciudad || ''
+          };
+        }
+      }
+
+      await saveToFirestore();
+      loadData();
+      alert(`Importadas ${jsonData.length - 1} guías correctamente`);
+    } catch (error) {
+      console.error("Error en importación:", error);
+      alert("Error al importar. Verifica el formato del Excel.");
+    } finally {
+      hideLoading();
+      fileInput.value = '';
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+async function deleteItem(button) {
   if (!confirm('¿Está seguro que desea eliminar este item?')) return;
+  
+  const row = button.closest('tr');
+  const guia = row.cells[0].textContent;
   
   database = database.filter(item => item.guia !== guia);
   
   try {
     await saveToFirestore();
-    loadData();
+    row.remove();
+    updateCounter();
   } catch (error) {
     alert('Error al eliminar el item');
     console.error(error);
   }
 }
 
-async function liberarFromRow(guia) {
+async function liberarFromRow(button) {
+  const row = button.closest('tr');
+  const guia = row.cells[0].textContent;
+  
   const index = database.findIndex(item => item.guia === guia);
   if(index !== -1) {
-    database[index].descripcion = "LIBERAR";
+    const ciudadActual = database[index].ciudad;
+    database[index] = {
+      ...database[index],
+      descripcion: "LIBERAR",
+      ciudad: ciudadActual
+    };
     
     try {
       await saveToFirestore();
@@ -333,6 +443,8 @@ async function liberarFromRow(guia) {
       console.error(error);
     }
   }
+  
+  toggleActionMenu(button.closest('.action-trigger').querySelector('button'));
 }
 
 /*****************************
@@ -349,6 +461,11 @@ function hideLoading() {
 function updateCounter() {
   const count = database.length;
   document.getElementById('itemCounter').textContent = `${count} ${count === 1 ? 'item' : 'items'}`;
+}
+
+function toggleActionMenu(button) {
+  const menu = button.nextElementSibling;
+  menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
 }
 
 function filterTable() {
@@ -370,7 +487,13 @@ function filterTable() {
  * EVENT LISTENERS *
  *****************************/
 document.addEventListener('click', function(e) {
-  const modals = ['addModal', 'assignModal'];
+  if(!e.target.closest('.action-trigger')) {
+    document.querySelectorAll('.action-menu').forEach(menu => {
+      menu.style.display = 'none';
+    });
+  }
+  
+  const modals = ['addModal', 'assignModal', 'editModal'];
   modals.forEach(modalId => {
     if (e.target == document.getElementById(modalId)) {
       document.getElementById(modalId).style.display = 'none';
