@@ -164,29 +164,22 @@ function loadData() {
     descCell.textContent = item.descripcion;
     
     const ciudadCell = newRow.insertCell(3);
+    ciudadCell.textContent = item.ciudad || ''; // Mostrar ciudad siempre si existe
     
     if(item.descripcion === "RETENER") {
-      // Estado inicial
+      // Estado inicial RETENER
       descCell.className = 'retener';
       
-      const ciudad = item.ciudad || manifestAssignments[item.manifiesto];
-      
-      if(ciudad) {
-        ciudadCell.textContent = ciudad;
-        
-        // Aplicar mismos estilos a ambas celdas
-        if(ciudad === "GYE") {
-          descCell.className = 'retener retener-amarillo';
+      // Si tiene ciudad asignada, aplicar estilos correspondientes
+      if(item.ciudad) {
+        if(item.ciudad === "GYE") {
+          descCell.classList.add('retener-amarillo');
           ciudadCell.className = 'ciudad-amarilla';
-        } else if(ciudad === "QUT") {
-          descCell.className = 'retener retener-naranja';
+        } else if(item.ciudad === "QUT") {
+          descCell.classList.add('retener-naranja');
           ciudadCell.className = 'ciudad-naranja';
         }
-      } else {
-        ciudadCell.textContent = '';
       }
-    } else {
-      ciudadCell.textContent = item.ciudad || '';
     }
     
     const actionCell = newRow.insertCell(4);
@@ -258,14 +251,12 @@ async function assignFromRow(button, guia) {
       try {
         await saveToFirestore();
         
-        // Obtener celdas
         const descCell = row.cells[2];
         const ciudadCell = row.cells[3];
         
-        // Asegurar que la ciudad sea visible
         ciudadCell.textContent = ciudad;
 
-        // Aplicar mismos estilos a ambas celdas según ciudad
+        // Aplicar estilos a ambas celdas
         if(ciudad === 'GYE') {
           descCell.className = 'retener retener-amarillo';
           ciudadCell.className = 'ciudad-amarilla';
