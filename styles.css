@@ -48,61 +48,42 @@ td {
   overflow: visible;
 } 
 
-/* ESTADO INICIAL - RETENER (sin asignar) */
+/* Estado inicial RETENER */
 .retener {
-  background-color: #ff0000 !important; /* Fondo rojo */
-  color: white !important;             /* Texto blanco */
+  background-color: #ff0000 !important;
+  color: white !important;
   font-weight: bold;
 }
 
-/* CIUDAD en items RETENER (sin asignar) */
-.retener + .ciudad-sin-asignar {
-  background-color: white !important;  /* Fondo blanco */
-  color: black !important;            /* Texto negro */
-  font-weight: normal;
-}
-
-/* RETENER ASIGNADO A GYE (después de click en Asignar) */
+/* RETENER asignado a GYE */
 .retener-amarillo {
-  background-color: #ffff00 !important; /* Fondo amarillo */
-  color: black !important;             /* Texto negro */
+  background-color: #ffff00 !important;
+  color: black !important;
   font-weight: bold;
 }
 
-.ciudad-amarilla {
-  background-color: #ffff00 !important; /* Fondo amarillo */
-  color: black !important;             /* Texto negro */
-  font-weight: bold;
-}
-
-/* RETENER ASIGNADO A QUT (después de click en Asignar) */
+/* RETENER asignado a QUT */
 .retener-naranja {
-  background-color: #ffa500 !important; /* Fondo naranja */
-  color: black !important;             /* Texto negro */
+  background-color: #ffa500 !important;
+  color: white !important;
   font-weight: bold;
 }
 
+/* Ciudad asignada a GYE */
+.ciudad-amarilla {
+  background-color: #ffff00 !important;
+  color: black !important;
+  font-weight: bold;
+}
+
+/* Ciudad asignada a QUT */
 .ciudad-naranja {
-  background-color: #ffa500 !important; /* Fondo naranja */
-  color: black !important;             /* Texto negro */
+  background-color: #ffa500 !important;
+  color: white !important;
   font-weight: bold;
 }
 
-/* Para TODAS las otras descripciones (no RETENER) */
-td:not(.retener):not(.retener-amarillo):not(.retener-naranja):not(.liberar) {
-  background-color: white !important;  /* Fondo blanco */
-  color: black !important;            /* Texto negro */
-  font-weight: normal;
-}
-
-/* CIUDAD para items no RETENER */
-td.ciudad-no-retenida {
-  background-color: white !important;  /* Fondo blanco */
-  color: black !important;            /* Texto negro */
-  font-weight: normal;
-}
-
-/* LIBERAR (mantengo tus estilos originales) */
+/* Estado LIBERAR */
 .liberar {
   background-color: #00C851 !important;
   color: white !important;
