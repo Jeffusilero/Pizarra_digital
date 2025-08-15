@@ -351,8 +351,11 @@ async function handleFileImport(fileInput) {
         
         if (!guia || !manifiesto || !descripcion) continue;
 
-        // Verificar si el manifiesto ya tiene ciudad asignada
-        const ciudad = descripcion === "RETENER" ? (manifestAssignments[manifiesto] || '') : '';
+        // Obtener ciudad asignada al manifiesto (si existe)
+        const ciudadAsignada = manifestAssignments[manifiesto] || '';
+        
+        // Solo asignar ciudad si es RETENER y existe asignación
+        const ciudad = descripcion === "RETENER" ? ciudadAsignada : '';
 
         const existingIndex = database.findIndex(item => item.guia === guia);
 
