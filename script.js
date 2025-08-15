@@ -168,6 +168,7 @@ function loadData() {
     const ciudadCell = newRow.insertCell(3);
     
     if(item.descripcion === "RETENER") {
+      // Estilo base para RETENER (fondo rojo, letra blanca)
       descCell.className = 'retener';
       
       // Verificar si hay ciudad asignada (directa o por manifiesto)
@@ -175,16 +176,18 @@ function loadData() {
       
       if(ciudad) {
         ciudadCell.textContent = ciudad;
-        ciudadCell.className = 'ciudad-blanca';
         
         // Aplicar colores según ciudad
         if(ciudad === "GYE") {
           descCell.classList.add('retener-amarillo');
-          ciudadCell.classList.add('ciudad-amarilla');
+          ciudadCell.className = 'ciudad-amarilla';
         } else if(ciudad === "QUT") {
           descCell.classList.add('retener-naranja');
-          ciudadCell.classList.add('ciudad-naranja');
+          ciudadCell.className = 'ciudad-naranja';
         }
+      } else {
+        // Si no tiene ciudad asignada, mantener estilo base
+        ciudadCell.textContent = '';
       }
     } else {
       ciudadCell.textContent = item.ciudad || '';

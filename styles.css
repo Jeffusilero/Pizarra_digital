@@ -42,53 +42,50 @@ th {
 
 /* Celda normal (fondo blanco) */
 td {
-  background-color: none;
+  background-color: transparent;
   color: black;
-  white-space: nowrap; /* Evita que el texto se oculte */
-  overflow: visible;   /* Permite que el texto sea visible */
+  white-space: nowrap;
+  overflow: visible;
 }
 
-/* RETENER (descripción) - Rojo con texto blanco */
+/* RETENER (descripción) - Rojo con texto blanco (estado inicial) */
 .retener {
-  background-color: #ff4444 !important; /* Fondo rojo */
-  color: white !important; /* Texto blanco */
+  background-color: #ff0000 !important;
+  color: white !important;
   font-weight: bold;
 }
 
 /* Ciudad inicial (sin fondo, texto negro) */
 .ciudad-blanca {
-  background-color: transparent !important; /* Sin fondo */
-  color: black !important; /* Texto negro */
-  font-weight: bold;
+  background-color: transparent !important;
+  color: black !important;
 }
 
 /* Asignado a GYE - Amarillo */
 .retener-amarillo {
-  background-color: #fa0000 !important; /* Fondo amarillo */
-  color: WHITE !important; /* Texto negro */
+  background-color: #ffff00 !important;
+  color: black !important;
   font-weight: bold;
 }
 
 .ciudad-amarilla {
-  background-color: #eeff00 !important; /* Fondo amarillo */
-  color: black !important; /* Texto negro */
-  font-weight: bold;
+  background-color: #ffff00 !important;
+  color: black !important;
 }
 
 /* Asignado a QUT - Naranja */
 .retener-naranja {
-  background-color: #ff8800 !important; /* Fondo naranja */
-  color: black !important; /* Texto negro */
+  background-color: #ffa500 !important;
+  color: black !important;
   font-weight: bold;
 }
 
 .ciudad-naranja {
-  background-color: #ff8800 !important; /* Fondo naranja */
-  color: black !important; /* Texto negro */
-  font-weight: bold;
+  background-color: #ffa500 !important;
+  color: black !important;
 }
 
-/* LIBERAR - Verde (aplica a ambos) */
+/* LIBERAR - Verde */
 .liberar {
   background-color: #00C851 !important;
   color: white !important;
