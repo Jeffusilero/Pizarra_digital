@@ -153,7 +153,7 @@ function loadData() {
     const descCell = newRow.insertCell(2);
     descCell.textContent = item.descripcion;
     if(item.descripcion === "RETENER") {
-      descCell.className = 'retener';
+      descCell.className = 'retener'; 
     }
     
     // Celda CIUDAD - SIEMPRE visible si existe
