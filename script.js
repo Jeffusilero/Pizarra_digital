@@ -349,25 +349,23 @@ async function handleFileImport(fileInput) {
         if (!guia || !manifiesto || !descripcion) continue;
 
         // Obtener ciudad asignada al manifiesto (si existe y es RETENER)
-        const ciudad = (descripcion === "RETENER" && manifestAssignments[manifiesto]) ? manifestAssignments[manifiesto] : '';
-
-        const existingIndex = database.findIndex(item => item.guia === guia);
-
-        if (existingIndex === -1) {
-          database.push({
-            guia,
-            manifiesto,
-            descripcion,
-            ciudad
-          });
-        } else {
-          database[existingIndex] = {
-            guia,
-            manifiesto,
-            descripcion,
-            ciudad: ciudad || database[existingIndex].ciudad || ''
-          };
-        }
+            const ciudad = manifestAssignments[manifiesto] || '';
+      
+      if (existingIndex === -1) {
+        database.push({
+          guia,
+          manifiesto,
+          descripcion,
+          ciudad
+        });
+      } else {
+        database[existingIndex] = {
+          guia,
+          manifiesto,
+          descripcion,
+          ciudad: ciudad || database[existingIndex].ciudad || ''
+        };
+      }
       }
 
       await saveToFirestore();
