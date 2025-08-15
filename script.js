@@ -160,7 +160,7 @@ function loadData() {
     const ciudadCell = newRow.insertCell(3);
     if(item.ciudad && (item.ciudad === 'GYE' || item.ciudad === 'QUT')) {
       ciudadCell.textContent = item.ciudad;
-      ciudadCell.className = 'ciudad-blanca';
+      ciudadCell.className = 'retener-amarillo';
     }
     
     // Si ya está asignado, aplicar colores
