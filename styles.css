@@ -55,11 +55,22 @@ td {
   font-weight: bold;
 }
 
+/* Ciudad inicial (sin fondo, texto negro) */
+.ciudad-blanca {
+  background-color: transparent !important;
+  color: black !important;
+}
+
 /* Asignado a GYE - Amarillo */
 .retener-amarillo {
   background-color: #f5222d !important;
   color: white !important;
   font-weight: bold;
+}
+
+.ciudad-amarilla {
+  background-color: none !important;
+  color: black !important;
 }
 
 /* Asignado a QUT - Naranja */
@@ -296,7 +307,7 @@ td {
   font-size: 1.2em;
   color: #333;
   margin-top: 15px;
-} 
+}
 
 /* Botón de Google */
 .google-login-btn {
