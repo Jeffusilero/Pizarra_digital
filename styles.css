@@ -43,7 +43,7 @@ th {
 /* Celda normal (fondo blanco) */
 td {
   background-color: none;
-  color: black;
+  color: rgb(57, 192, 102);
   white-space: nowrap; /* Evita que el texto se oculte */
   overflow: visible;   /* Permite que el texto sea visible */
 }
