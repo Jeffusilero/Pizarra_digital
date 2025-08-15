@@ -146,33 +146,38 @@ function loadData() {
   database.forEach(item => {
     const newRow = tableBody.insertRow();
     
-    // Celda de descripción
-    const descCell = newRow.insertCell(2);
-    descCell.className = item.descripcion === "RETENER" ? 'retener' : '';
-    descCell.textContent = item.descripcion;
-    
-    // Celda de ciudad
-    const ciudadCell = newRow.insertCell(3);
-    if(item.ciudad) {
-      ciudadCell.textContent = item.ciudad;
-      if(item.descripcion === "RETENER") {
-        if(item.ciudad === "GYE") {
-          descCell.classList.add('retener-amarillo');
-          ciudadCell.classList.add('retener-amarillo');
-        } else if(item.ciudad === "QUT") {
-          descCell.classList.add('retener-naranja');
-          ciudadCell.classList.add('retener-naranja');
-        }
-      }
-    }
-    
-    // Resto de celdas
+    // Celdas normales
     newRow.insertCell(0).textContent = item.guia;
     newRow.insertCell(1).textContent = item.manifiesto;
     
-    // Celda de acciones
+    // Celda RETENER (siempre roja)
+    const retenerCell = newRow.insertCell(2);
+    retenerCell.textContent = item.descripcion;
+    if(item.descripcion === "RETENER") {
+      retenerCell.className = 'retener';
+    }
+    
+    // Celda CIUDAD (siempre visible si existe)
+    const ciudadCell = newRow.insertCell(3);
+    if(item.ciudad) {
+      ciudadCell.textContent = item.ciudad;
+      ciudadCell.className = 'ciudad-blanca'; // Nueva clase
+    }
+    
+    // Celda ACCIONES
     const actionCell = newRow.insertCell(4);
     actionCell.innerHTML = generateActionButtons(item.descripcion, item.guia);
+    
+    // Si ya está asignado, aplicar colores
+    if(item.ciudad && item.descripcion === "RETENER") {
+      if(item.ciudad === "GYE") {
+        retenerCell.classList.add('retener-amarillo');
+        ciudadCell.classList.add('retener-amarillo');
+      } else if(item.ciudad === "QUT") {
+        retenerCell.classList.add('retener-naranja');
+        ciudadCell.classList.add('retener-naranja');
+      }
+    }
   });
   updateCounter();
 }
@@ -240,20 +245,20 @@ async function assignFromRow(button) {
       try {
         await saveToFirestore();
         
-        // Actualizar colores
-        const descCell = row.cells[2];
+        // Actualizar visualización
+        const retenerCell = row.cells[2];
         const ciudadCell = row.cells[3];
         
-        // Resetear clases primero
-        descCell.className = 'retener';
-        ciudadCell.className = '';
+        // Resetear clases
+        retenerCell.className = 'retener';
+        ciudadCell.className = 'ciudad-blanca';
         
         // Aplicar nuevos colores
         if(ciudad === 'GYE') {
-          descCell.classList.add('retener-amarillo');
+          retenerCell.classList.add('retener-amarillo');
           ciudadCell.classList.add('retener-amarillo');
         } else if(ciudad === 'QUT') {
-          descCell.classList.add('retener-naranja');
+          retenerCell.classList.add('retener-naranja');
           ciudadCell.classList.add('retener-naranja');
         }
         
