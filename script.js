@@ -305,11 +305,14 @@ async function addItem() {
     return;
   }
 
+    // Verificar si el manifiesto ya tiene ciudad asignada
+  const ciudadAsignada = manifestAssignments[manifiesto] || '';
+
   database.push({
     guia: guia,
     manifiesto: manifiesto,
     descripcion: descripcion,
-    ciudad: ''
+    ciudad: 'ciudadAsignada'
   });
   
   try {
@@ -348,7 +351,8 @@ async function handleFileImport(fileInput) {
         
         if (!guia || !manifiesto || !descripcion) continue;
 
-        const ciudad = descripcion === "RETENER" ? '' : (database.find(item => item.guia === guia)?.ciudad || '');
+        // Verificar si el manifiesto ya tiene ciudad asignada
+        const ciudad = descripcion === "RETENER" ? (manifestAssignments[manifiesto] || '') : '';
 
         const existingIndex = database.findIndex(item => item.guia === guia);
 
