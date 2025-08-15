@@ -1,7 +1,10 @@
+/**************************************
+ * VARIABLES GLOBALES Y CONFIGURACIÓN *
+ **************************************/
 let database = [];
 let manifestAssignments = {};
 
-// Configuración de Firebase (sin cambios)
+// Configuración de Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyD7ZJ5qaJ4tsy-lRCifOiRsRS42R9OQKNA",
   authDomain: "pizarra-digital-29922.firebaseapp.com",
@@ -12,20 +15,38 @@ const firebaseConfig = {
   measurementId: "G-6KWBGN070G"
 };
 
+// Inicialización de Firebase
 const app = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// Funciones de autenticación (sin cambios)
+/*****************************
+ * AUTENTICACIÓN CON GOOGLE *
+ *****************************/
 function loginWithGoogle() {
   const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider).catch(error => {
-    console.error("Error al iniciar sesión:", error);
-  });
+  showLoading();
+  
+  auth.signInWithPopup(provider)
+    .then(() => {
+      hideLoading();
+      window.location.reload();
+    })
+    .catch(error => {
+      hideLoading();
+      console.error("Error al iniciar sesión:", error);
+      alert("Error al iniciar sesión. Por favor intenta nuevamente.");
+    });
 }
 
 function logoutUser() {
-  auth.signOut();
+  showLoading();
+  auth.signOut()
+    .then(() => window.location.reload())
+    .catch((error) => {
+      console.error("Error al cerrar sesión:", error);
+      hideLoading();
+    });
 }
 
 function initAuthStateListener() {
@@ -35,11 +56,28 @@ function initAuthStateListener() {
       loadAppData();
     } else {
       document.getElementById('mainContainer').style.display = 'none';
+      
+      if (!document.getElementById('loginBtnContainer')) {
+        const loginContainer = document.createElement('div');
+        loginContainer.id = 'loginBtnContainer';
+        loginContainer.style.textAlign = 'center';
+        loginContainer.style.marginTop = '20%';
+        
+        const loginBtn = document.createElement('button');
+        loginBtn.textContent = 'Iniciar sesión con Google';
+        loginBtn.className = 'google-login-btn';
+        loginBtn.onclick = loginWithGoogle;
+        
+        loginContainer.appendChild(loginBtn);
+        document.body.appendChild(loginContainer);
+      }
     }
   });
 }
 
-// Funciones principales
+/*****************************
+ * FUNCIONES PRINCIPALES *
+ *****************************/
 async function loadAppData() {
   showLoading();
   try {
@@ -47,17 +85,45 @@ async function loadAppData() {
     database = data.database || [];
     manifestAssignments = data.manifest || {};
     loadData();
+  } catch (error) {
+    console.error("Error cargando datos:", error);
+    alert("Error al cargar datos. Recarga la página.");
   } finally {
     hideLoading();
   }
 }
 
 async function loadFromFirestore() {
-  const user = auth.currentUser;
-  if (!user) return { database: [], manifest: {} };
-  
-  const doc = await db.collection("pizarra").doc("datos").get();
-  return doc.exists ? doc.data() : { database: [], manifest: {} };
+  try {
+    const user = auth.currentUser;
+    if (!user) throw new Error("Usuario no autenticado");
+    
+    const doc = await db.collection("pizarra").doc("datos").get();
+    
+    if (!doc.exists) {
+      await db.collection("pizarra").doc("datos").set({
+        database: [],
+        manifest: {}
+      });
+      return { database: [], manifest: {} };
+    }
+    
+    const data = doc.data();
+    
+    // Sincronizar ciudades en la base de datos con las asignaciones de manifiestos
+    if (data.database && data.manifest) {
+      data.database.forEach(item => {
+        if (item.descripcion === "RETENER" && !item.ciudad && data.manifest[item.manifiesto]) {
+          item.ciudad = data.manifest[item.manifiesto];
+        }
+      });
+    }
+    
+    return data;
+  } catch (error) {
+    console.error("Error en loadFromFirestore:", error);
+    throw error;
+  }
 }
 
 async function saveToFirestore() {
@@ -67,12 +133,19 @@ async function saveToFirestore() {
       database: database,
       manifest: manifestAssignments
     }, { merge: true });
+    return true;
+  } catch (error) {
+    console.error("Error Firestore:", error);
+    alert(`Error al guardar: ${error.message}`);
+    return false;
   } finally {
     hideLoading();
   }
 }
 
-// Funciones de interfaz
+/*****************************
+ * FUNCIONES DE INTERFAZ *
+ *****************************/ 
 function loadData() {
   const tableBody = document.getElementById('pizarra-table').getElementsByTagName('tbody')[0];
   tableBody.innerHTML = '';
@@ -80,47 +153,91 @@ function loadData() {
   database.forEach(item => {
     const newRow = tableBody.insertRow();
     
+    // Celdas básicas
     newRow.insertCell(0).textContent = item.guia;
     newRow.insertCell(1).textContent = item.manifiesto;
     
+    // Celda RETENER
     const descCell = newRow.insertCell(2);
     descCell.textContent = item.descripcion;
     
+    // Celda CIUDAD
     const ciudadCell = newRow.insertCell(3);
     
     if(item.descripcion === "RETENER") {
+      // Aplicar estilo base para RETENER
       descCell.className = 'retener';
       
+      // Verificar si hay ciudad asignada
       const ciudad = item.ciudad || manifestAssignments[item.manifiesto];
       
       if(ciudad) {
         ciudadCell.textContent = ciudad;
-        ciudadCell.className = 'ciudad-blanca';
         
+        // Aplicar colores según ciudad
         if(ciudad === "GYE") {
           descCell.classList.add('retener-amarillo');
-          ciudadCell.classList.add('ciudad-amarilla');
+          ciudadCell.className = 'ciudad-amarilla';
         } else if(ciudad === "QUT") {
           descCell.classList.add('retener-naranja');
-          ciudadCell.classList.add('ciudad-naranja');
+          ciudadCell.className = 'ciudad-naranja';
+        } else {
+          ciudadCell.className = 'ciudad-blanca';
         }
+      } else {
+        ciudadCell.className = 'ciudad-blanca';
       }
     } else {
       ciudadCell.textContent = item.ciudad || '';
     }
     
+    // Celda ACCIONES
     const actionCell = newRow.insertCell(4);
-    if (item.descripcion === "RETENER") {
-      actionCell.innerHTML = `
-        <div class="action-buttons">
-          <button class="btn-action btn-blue" onclick="assignFromRow('${item.guia}')">Asignar</button>
-          <button class="btn-action btn-green" onclick="liberarFromRow('${item.guia}')">Liberar</button>
-        </div>
-      `;
-    }
+    actionCell.innerHTML = generateActionButtons(item.descripcion, item.guia);
   });
+  
+  updateCounter();
 }
 
+function generateActionButtons(descripcion, guia) {
+  if (descripcion === "RETENER") {
+    return `
+      <div class="action-buttons">
+        <button class="btn-action btn-blue" onclick="assignFromRow('${guia}')">Asignar</button>
+        <button class="btn-action btn-green" onclick="liberarFromRow('${guia}')">Liberar</button>
+        <button class="btn-action btn-gray" onclick="deleteItem('${guia}')">Eliminar</button>
+      </div>
+    `;
+  }
+  return `
+    <div class="action-buttons">
+      <button class="btn-action btn-gray" onclick="deleteItem('${guia}')">Eliminar</button>
+    </div>
+  `;
+}
+
+/*****************************
+ * FUNCIONES DE MODALES *
+ *****************************/
+function openAddModal() {
+  document.getElementById('addModal').style.display = 'block';
+}
+
+function closeAddModal() {
+  document.getElementById('addModal').style.display = 'none';
+}
+
+function openAssignModal() {
+  document.getElementById('assignModal').style.display = 'block';
+}
+
+function closeAssignModal() {
+  document.getElementById('assignModal').style.display = 'none';
+}
+
+/*****************************
+ * FUNCIONES DE OPERACIONES *
+ *****************************/
 async function assignFromRow(guia) {
   const item = database.find(item => item.guia === guia);
   if (!item) return;
@@ -151,9 +268,11 @@ async function assignManifest() {
     }
   });
   
-  await saveToFirestore();
-  loadData();
-  closeAssignModal();
+  if (await saveToFirestore()) {
+    loadData();
+    document.getElementById('assign-manifiesto').value = '';
+    closeAssignModal();
+  }
 }
 
 async function addItem() {
@@ -161,7 +280,10 @@ async function addItem() {
   const manifiesto = document.getElementById('add-manifiesto').value;
   const descripcion = document.getElementById('add-descripcion').value;
   
-  if (!guia || !manifiesto || !descripcion) return;
+  if (!guia || !manifiesto || !descripcion) {
+    alert('Por favor complete los campos obligatorios');
+    return;
+  }
 
   database.push({
     guia: guia,
@@ -170,21 +292,51 @@ async function addItem() {
     ciudad: (descripcion === "RETENER" && manifestAssignments[manifiesto]) ? manifestAssignments[manifiesto] : ''
   });
   
-  await saveToFirestore();
-  loadData();
-  closeAddModal();
+  try {
+    await saveToFirestore();
+    loadData();
+    document.getElementById('add-guia').value = '';
+    document.getElementById('add-manifiesto').value = '';
+    document.getElementById('add-descripcion').value = '';
+    closeAddModal();
+  } catch (error) {
+    console.error("Error al agregar:", error);
+    alert("Error al agregar el item. Intente nuevamente.");
+  }
+}
+
+async function deleteItem(guia) {
+  if (!confirm('¿Está seguro que desea eliminar este item?')) return;
+  
+  database = database.filter(item => item.guia !== guia);
+  
+  try {
+    await saveToFirestore();
+    loadData();
+  } catch (error) {
+    alert('Error al eliminar el item');
+    console.error(error);
+  }
 }
 
 async function liberarFromRow(guia) {
   const index = database.findIndex(item => item.guia === guia);
   if(index !== -1) {
     database[index].descripcion = "LIBERAR";
-    await saveToFirestore();
-    loadData();
+    
+    try {
+      await saveToFirestore();
+      loadData();
+    } catch (error) {
+      alert('Error al liberar el item');
+      console.error(error);
+    }
   }
 }
 
-// Funciones auxiliares
+/*****************************
+ * FUNCIONES AUXILIARES *
+ *****************************/
 function showLoading() {
   document.getElementById('loading').style.display = 'flex';
 }
@@ -193,23 +345,38 @@ function hideLoading() {
   document.getElementById('loading').style.display = 'none';
 }
 
-function openAddModal() {
-  document.getElementById('addModal').style.display = 'block';
+function updateCounter() {
+  const count = database.length;
+  document.getElementById('itemCounter').textContent = `${count} ${count === 1 ? 'item' : 'items'}`;
 }
 
-function closeAddModal() {
-  document.getElementById('addModal').style.display = 'none';
+function filterTable() {
+  const input = document.getElementById('searchInput');
+  const filter = input.value.toUpperCase();
+  const table = document.getElementById('pizarra-table');
+  const tr = table.getElementsByTagName('tr');
+  
+  for (let i = 1; i < tr.length; i++) {
+    const td = tr[i].getElementsByTagName('td')[0];
+    if (td) {
+      const txtValue = td.textContent || td.innerText;
+      tr[i].style.display = txtValue.toUpperCase().indexOf(filter) > -1 ? "" : "none";
+    }       
+  }
 }
 
-function openAssignModal() {
-  document.getElementById('assignModal').style.display = 'block';
-}
+/*****************************
+ * EVENT LISTENERS *
+ *****************************/
+document.addEventListener('click', function(e) {
+  const modals = ['addModal', 'assignModal'];
+  modals.forEach(modalId => {
+    if (e.target == document.getElementById(modalId)) {
+      document.getElementById(modalId).style.display = 'none';
+    }
+  });
+});
 
-function closeAssignModal() {
-  document.getElementById('assignModal').style.display = 'none';
-}
-
-// Inicialización
 document.addEventListener('DOMContentLoaded', () => {
   initAuthStateListener();
 });
