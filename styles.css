@@ -51,7 +51,7 @@ td {
 /* RETENER (descripción) - Rojo con texto negro */
 .retener {
   background-color: #ff4444 !important;
-  color: white !important;
+  color: #f6f8fa !important;
   font-weight: bold;
 }
 
