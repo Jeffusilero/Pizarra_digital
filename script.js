@@ -7,13 +7,13 @@ let currentEditingRow = null;
 
 // Configuración de Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyD7ZJ5qaJ4tsy-lRCifOiRsRS42R9OQKNA",
-  authDomain: "pizarra-digital-29922.firebaseapp.com",
-  projectId: "pizarra-digital-29922",
-  storageBucket: "pizarra-digital-29922.appspot.com",
-  messagingSenderId: "205605287574",
-  appId: "1:205605287574:web:e56c8f071906d89f7774b7",
-  measurementId: "G-6KWBGN070G"
+    apiKey: "AIzaSyD7ZJ5qaJ4tsy-lRCifOiRsRS42R9OQKNA",
+    authDomain: "pizarra-digital-29922.firebaseapp.com",
+    projectId: "pizarra-digital-29922",
+    storageBucket: "pizarra-digital-29922.appspot.com",
+    messagingSenderId: "205605287574",
+    appId: "1:205605287574:web:e56c8f071906d89f7774b7",
+    measurementId: "G-6KWBGN070G"
 };
 
 // Inicialización de Firebase
@@ -25,470 +25,406 @@ const db = firebase.firestore();
  * AUTENTICACIÓN CON GOOGLE *
  *****************************/
 function loginWithGoogle() {
-  const provider = new firebase.auth.GoogleAuthProvider();
-  showLoading();
-  
-  auth.signInWithPopup(provider)
-    .then(() => {
-      hideLoading();
-      window.location.reload();
-    })
-    .catch(error => {
-      hideLoading();
-      console.error("Error al iniciar sesión:", error);
-      alert("Error al iniciar sesión. Por favor intenta nuevamente.");
-    });
+    const provider = new firebase.auth.GoogleAuthProvider();
+    showLoading();
+    auth.signInWithPopup(provider)
+        .then(() => {
+            hideLoading();
+            window.location.reload();
+        })
+        .catch(error => {
+            hideLoading();
+            console.error("Error al iniciar sesión:", error);
+            alert("Error al iniciar sesión. Por favor intenta nuevamente.");
+        });
 }
 
 function logoutUser() {
-  showLoading();
-  auth.signOut()
-    .then(() => window.location.reload())
-    .catch((error) => {
-      console.error("Error al cerrar sesión:", error);
-      hideLoading();
-    });
+    showLoading();
+    auth.signOut()
+        .then(() => window.location.reload())
+        .catch((error) => {
+            console.error("Error al cerrar sesión:", error);
+            hideLoading();
+        });
 }
 
 function initAuthStateListener() {
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      console.log("Usuario autenticado:", user.email);
-      document.getElementById('mainContainer').style.display = 'block';
-      loadAppData();
-    } else {
-      console.log("Usuario no autenticado");
-      document.getElementById('mainContainer').style.display = 'none';
-      
-      if (!document.getElementById('loginBtnContainer')) {
-        const loginContainer = document.createElement('div');
-        loginContainer.id = 'loginBtnContainer';
-        loginContainer.style.textAlign = 'center';
-        loginContainer.style.marginTop = '20%';
-        
-        const loginBtn = document.createElement('button');
-        loginBtn.textContent = 'Iniciar sesión con Google';
-        loginBtn.className = 'google-login-btn';
-        loginBtn.onclick = loginWithGoogle;
-        
-        loginContainer.appendChild(loginBtn);
-        document.body.appendChild(loginContainer);
-      }
-    }
-  });
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            console.log("Usuario autenticado:", user.email);
+            document.getElementById('mainContainer').style.display = 'block';
+            document.getElementById('loginBtnContainer').style.display = 'none';
+            loadAppData();
+        } else {
+            console.log("Usuario no autenticado");
+            document.getElementById('mainContainer').style.display = 'none';
+            document.getElementById('loginBtnContainer').style.display = 'block';
+        }
+    });
 }
 
 /*****************************
  * FUNCIONES PRINCIPALES *
  *****************************/
 async function loadAppData() {
-  showLoading();
-  try {
-    const data = await loadFromFirestore();
-    database = data.database || [];
-    manifestAssignments = data.manifest || {};
-    loadData();
-  } catch (error) {
-    console.error("Error cargando datos:", error);
-    alert("Error al cargar datos. Recarga la página.");
-  } finally {
-    hideLoading();
-  }
+    showLoading();
+    try {
+        const data = await loadFromFirestore();
+        database = data.database || [];
+        manifestAssignments = data.manifest || {};
+        loadData();
+    } catch (error) {
+        console.error("Error cargando datos:", error);
+        alert("Error al cargar datos. Recarga la página.");
+    } finally {
+        hideLoading();
+    }
 }
 
 async function loadFromFirestore() {
-  try {
-    const user = auth.currentUser;
-    if (!user) throw new Error("Usuario no autenticado");
-    
-    const doc = await db.collection("pizarra").doc("datos").get();
-    
-    if (!doc.exists) {
-      await db.collection("pizarra").doc("datos").set({
-        database: [],
-        manifest: {}
-      });
-      return { database: [], manifest: {} };
-    }
-    
-    const data = doc.data();
-    
-    // Sincronizar ciudades en la base de datos con las asignaciones de manifiestos
-    if (data.database && data.manifest) {
-      data.database.forEach(item => {
-        if (item.descripcion === "RETENER" && !item.ciudad && data.manifest[item.manifiesto]) {
-          item.ciudad = data.manifest[item.manifiesto];
+    try {
+        const user = auth.currentUser;
+        if (!user) throw new Error("Usuario no autenticado");
+        
+        const doc = await db.collection("pizarra").doc("datos").get();
+        
+        if (!doc.exists) {
+            await db.collection("pizarra").doc("datos").set({
+                database: [],
+                manifest: {}
+            });
+            return { database: [], manifest: {} };
         }
-      });
+        
+        return doc.data();
+    } catch (error) {
+        console.error("Error en loadFromFirestore:", error);
+        throw error;
     }
-    
-    return data;
-  } catch (error) {
-    console.error("Error en loadFromFirestore:", error);
-    throw error;
-  }
 }
 
 async function saveToFirestore() {
-  showLoading();
-  try {
-    await db.collection("pizarra").doc("datos").set({
-      database: database,
-      manifest: manifestAssignments
-    }, { merge: true });
-    console.log("Datos guardados correctamente");
-    return true;
-  } catch (error) {
-    console.error("Error Firestore:", error.code, error.message);
-    alert(`Error al guardar: ${error.message}`);
-    return false;
-  } finally {
-    hideLoading();
-  }
+    showLoading();
+    try {
+        await db.collection("pizarra").doc("datos").set({
+            database: database,
+            manifest: manifestAssignments
+        }, { merge: true });
+        return true;
+    } catch (error) {
+        console.error("Error Firestore:", error);
+        alert(`Error al guardar: ${error.message}`);
+        return false;
+    } finally {
+        hideLoading();
+    }
 }
 
 /*****************************
  * FUNCIONES DE INTERFAZ *
- *****************************/ 
+ *****************************/
 function loadData() {
-  const tableBody = document.getElementById('pizarra-table').getElementsByTagName('tbody')[0];
-  tableBody.innerHTML = '';
-  
-  database.forEach(item => {
-    const newRow = tableBody.insertRow();
+    const tableBody = document.getElementById('pizarra-table').getElementsByTagName('tbody')[0];
+    tableBody.innerHTML = '';
     
-    newRow.insertCell(0).textContent = item.guia;
-    newRow.insertCell(1).textContent = item.manifiesto;
-    
-    const descCell = newRow.insertCell(2);
-    descCell.textContent = item.descripcion;
-    
-    const ciudadCell = newRow.insertCell(3);
-    ciudadCell.textContent = item.ciudad || ''; // Mostrar ciudad siempre si existe
-    
-    if(item.descripcion === "RETENER") {
-      // Estado inicial RETENER
-      descCell.className = 'retener';
-      
-      // Si tiene ciudad asignada, aplicar estilos correspondientes
-      if(item.ciudad) {
-        if(item.ciudad === "GYE") {
-          descCell.classList.add('retener-amarillo');
-          ciudadCell.className = 'ciudad-amarilla';
-        } else if(item.ciudad === "QUT") {
-          descCell.classList.add('retener-naranja');
-          ciudadCell.className = 'ciudad-naranja';
+    database.forEach(item => {
+        const newRow = tableBody.insertRow();
+        
+        // Celdas básicas
+        newRow.insertCell(0).textContent = item.guia;
+        newRow.insertCell(1).textContent = item.manifiesto;
+        
+        // Celda Descripción
+        const descCell = newRow.insertCell(2);
+        descCell.textContent = item.descripcion;
+        
+        // Celda Ciudad - SIEMPRE mostrar si existe
+        const ciudadCell = newRow.insertCell(3);
+        ciudadCell.textContent = item.ciudad || '';
+        
+        // Aplicar estilos
+        if(item.descripcion === "RETENER") {
+            if(item.ciudad) {
+                if(item.ciudad === "GYE") {
+                    descCell.className = 'retener-gye';
+                    ciudadCell.className = 'ciudad-gye';
+                } else if(item.ciudad === "QUT") {
+                    descCell.className = 'retener-qut';
+                    ciudadCell.className = 'ciudad-qut';
+                }
+            } else {
+                descCell.className = 'retener-inicial';
+            }
+        } else if(item.descripcion === "LIBERAR") {
+            descCell.className = 'liberar';
         }
-      }
-    }
+        
+        // Celda Acciones
+        const actionCell = newRow.insertCell(4);
+        actionCell.innerHTML = generateActionButtons(item);
+    });
     
-    const actionCell = newRow.insertCell(4);
-    actionCell.innerHTML = generateActionButtons(item.descripcion, item.guia);
-  });
-  
-  updateCounter();
+    updateCounter();
 }
 
-function generateActionButtons(descripcion, guia) {
-  if (descripcion === "RETENER") {
+function generateActionButtons(item) {
+    if (item.descripcion === "RETENER") {
+        return `
+            <div class="action-buttons">
+                <div class="action-trigger">
+                    <button class="btn-action btn-blue" onclick="toggleActionMenu(this)">Acción</button>
+                    <div class="action-menu">
+                        <button class="btn-action btn-light-blue" onclick="assignFromRow(this, '${item.guia}')">Asignar</button>
+                        <button class="btn-action btn-green" onclick="liberarFromRow('${item.guia}')">Liberar</button>
+                    </div>
+                </div>
+                <button class="btn-action btn-gray" onclick="deleteItem('${item.guia}')">Eliminar</button>
+            </div>
+        `;
+    }
     return `
-      <div class="action-buttons">
-        <div class="action-trigger">
-          <button class="btn-action btn-blue" onclick="toggleActionMenu(this)">Acción</button>
-          <div class="action-menu">
-            <button class="btn-action btn-light-blue" onclick="assignFromRow(this, '${guia}')">Asignar</button>
-            <button class="btn-action btn-green" onclick="liberarFromRow(this)">Liberar</button>
-          </div>
+        <div class="action-buttons">
+            <button class="btn-action btn-gray" onclick="deleteItem('${item.guia}')">Eliminar</button>
         </div>
-        <button class="btn-action btn-gray" onclick="deleteItem(this)">Eliminar</button>
-      </div>
     `;
-  }
-  return `
-    <div class="action-buttons">
-      <button class="btn-action btn-gray" onclick="deleteItem(this)">Eliminar</button>
-    </div>
-  `;
 }
 
 /*****************************
  * FUNCIONES DE MODALES *
  *****************************/
 function openAddModal() {
-  document.getElementById('addModal').style.display = 'block';
+    document.getElementById('addModal').style.display = 'block';
 }
 
 function closeAddModal() {
-  document.getElementById('addModal').style.display = 'none';
+    document.getElementById('addModal').style.display = 'none';
 }
 
 function openAssignModal() {
-  document.getElementById('assignModal').style.display = 'block';
+    document.getElementById('assignModal').style.display = 'block';
 }
 
 function closeAssignModal() {
-  document.getElementById('assignModal').style.display = 'none';
-}
-
-function closeEditModal() {
-  document.getElementById('editModal').style.display = 'none';
+    document.getElementById('assignModal').style.display = 'none';
 }
 
 /*****************************
  * FUNCIONES DE OPERACIONES *
  *****************************/
 async function assignFromRow(button, guia) {
-  const row = button.closest('tr');
-  const manifiesto = row.cells[1].textContent;
-  
-  if (manifestAssignments[manifiesto]) {
-    const ciudad = manifestAssignments[manifiesto];
-    const index = database.findIndex(item => item.guia === guia);
+    const row = button.closest('tr');
+    const manifiesto = row.cells[1].textContent;
     
-    if (index !== -1) {
-      database[index].ciudad = ciudad;
-      
-      try {
-        await saveToFirestore();
+    if (manifestAssignments[manifiesto]) {
+        const ciudad = manifestAssignments[manifiesto];
+        const index = database.findIndex(item => item.guia === guia);
         
-        const descCell = row.cells[2];
-        const ciudadCell = row.cells[3];
-        
-        ciudadCell.textContent = ciudad;
-
-        // Aplicar estilos a ambas celdas
-        if(ciudad === 'GYE') {
-          descCell.className = 'retener retener-amarillo';
-          ciudadCell.className = 'ciudad-amarilla';
-        } else if(ciudad === 'QUT') {
-          descCell.className = 'retener retener-naranja';
-          ciudadCell.className = 'ciudad-naranja';
+        if (index !== -1) {
+            database[index].ciudad = ciudad;
+            
+            if (await saveToFirestore()) {
+                const descCell = row.cells[2];
+                const ciudadCell = row.cells[3];
+                
+                if(ciudad === "GYE") {
+                    descCell.className = 'retener-gye';
+                    ciudadCell.className = 'ciudad-gye';
+                } else if(ciudad === "QUT") {
+                    descCell.className = 'retener-qut';
+                    ciudadCell.className = 'ciudad-qut';
+                }
+            }
         }
-        
-      } catch (error) {
-        console.error(error);
-      }
+    } else {
+        alert('Primero asigna una ciudad al manifiesto');
     }
-  } else {
-    alert('Este manifiesto no tiene ciudad asignada. Use el botón "Asignar Manifiesto" primero.');
-  }
-  
-  toggleActionMenu(button.closest('.action-trigger').querySelector('button'));
+    
+    toggleActionMenu(button);
 }
 
 async function assignManifest() {
-  const manifiesto = document.getElementById('assign-manifiesto').value.trim();
-  const ciudad = document.getElementById('assign-ciudad').value;
-  
-  if (!manifiesto || !ciudad) {
-    alert('Complete todos los campos');
-    return;
-  }
-
-  manifestAssignments[manifiesto] = ciudad;
-  
-  database.forEach(item => {
-    if (item.manifiesto === manifiesto && item.descripcion === "RETENER") {
-      item.ciudad = ciudad;
+    const manifiesto = document.getElementById('assign-manifiesto').value.trim();
+    const ciudad = document.getElementById('assign-ciudad').value;
+    
+    if (!manifiesto || !ciudad) {
+        alert('Complete todos los campos');
+        return;
     }
-  });
-  
-  if (await saveToFirestore()) {
-    loadData();
-    document.getElementById('assign-manifiesto').value = '';
-    closeAssignModal();
-  }
+
+    manifestAssignments[manifiesto] = ciudad;
+    
+    // Actualizar todas las guías con este manifiesto
+    database.forEach(item => {
+        if (item.manifiesto === manifiesto && item.descripcion === "RETENER") {
+            item.ciudad = ciudad;
+        }
+    });
+    
+    if (await saveToFirestore()) {
+        loadData();
+        document.getElementById('assign-manifiesto').value = '';
+        closeAssignModal();
+    }
 }
 
 async function addItem() {
-  const guia = document.getElementById('add-guia').value;
-  const manifiesto = document.getElementById('add-manifiesto').value;
-  const descripcion = document.getElementById('add-descripcion').value;
-  
-  if (!guia || !manifiesto || !descripcion) {
-    alert('Por favor complete los campos obligatorios');
-    return;
-  }
+    const guia = document.getElementById('add-guia').value.trim();
+    const manifiesto = document.getElementById('add-manifiesto').value.trim();
+    const descripcion = document.getElementById('add-descripcion').value;
+    
+    if (!guia || !manifiesto || !descripcion) {
+        alert('Complete todos los campos');
+        return;
+    }
 
-  // Obtener ciudad asignada al manifiesto (si existe)
-  const ciudad = (descripcion === "RETENER" && manifestAssignments[manifiesto]) ? manifestAssignments[manifiesto] : '';
+    // Verificar si la guía ya existe
+    if (database.some(item => item.guia === guia)) {
+        alert('Esta guía ya existe');
+        return;
+    }
 
-  database.push({
-    guia: guia,
-    manifiesto: manifiesto,
-    descripcion: descripcion,
-    ciudad: ciudad
-  });
-  
-  try {
-    await saveToFirestore();
-    loadData();
-    document.getElementById('add-guia').value = '';
-    document.getElementById('add-manifiesto').value = '';
-    document.getElementById('add-descripcion').value = '';
-    closeAddModal();
-  } catch (error) {
-    console.error("Error al agregar:", error);
-    alert("Error al agregar el item. Intente nuevamente.");
-  }
+    const ciudad = (descripcion === "RETENER" && manifestAssignments[manifiesto]) ? manifestAssignments[manifiesto] : '';
+
+    database.push({
+        guia: guia,
+        manifiesto: manifiesto,
+        descripcion: descripcion,
+        ciudad: ciudad
+    });
+    
+    if (await saveToFirestore()) {
+        loadData();
+        document.getElementById('add-guia').value = '';
+        document.getElementById('add-manifiesto').value = '';
+        document.getElementById('add-descripcion').value = '';
+        closeAddModal();
+    }
+}
+
+async function deleteItem(guia) {
+    if (!confirm('¿Está seguro que desea eliminar este item?')) return;
+    
+    database = database.filter(item => item.guia !== guia);
+    
+    if (await saveToFirestore()) {
+        loadData();
+    }
+}
+
+async function liberarFromRow(guia) {
+    const index = database.findIndex(item => item.guia === guia);
+    
+    if (index !== -1 && database[index].descripcion === "RETENER") {
+        database[index].descripcion = "LIBERAR";
+        
+        if (await saveToFirestore()) {
+            loadData();
+        }
+    }
 }
 
 async function handleFileImport(fileInput) {
-  const file = fileInput.files[0];
-  if (!file) return;
+    const file = fileInput.files[0];
+    if (!file) return;
 
-  const reader = new FileReader();
-  reader.onload = async function(e) {
-    showLoading();
-    try {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: 'array' });
-      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        showLoading();
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
 
-      for (let i = 1; i < jsonData.length; i++) {
-        const rowData = jsonData[i];
-        if (!rowData || rowData.length < 3) continue;
+            for (let i = 1; i < jsonData.length; i++) {
+                const row = jsonData[i];
+                if (!row || row.length < 3) continue;
 
-        const guia = (rowData[0]?.toString() || '').trim();
-        const manifiesto = (rowData[1]?.toString() || '').trim();
-        const descripcion = (rowData[2]?.toString() || '').trim().toUpperCase();
-        
-        if (!guia || !manifiesto || !descripcion) continue;
+                const guia = (row[0]?.toString() || '').trim();
+                const manifiesto = (row[1]?.toString() || '').trim();
+                const descripcion = (row[2]?.toString() || '').trim().toUpperCase();
+                
+                if (!guia || !manifiesto || !descripcion) continue;
 
-        // Obtener ciudad asignada al manifiesto (si existe y es RETENER)
-        const ciudad = (descripcion === "RETENER" && manifestAssignments[manifiesto]) ? manifestAssignments[manifiesto] : '';
+                const ciudad = (descripcion === "RETENER" && manifestAssignments[manifiesto]) ? manifestAssignments[manifiesto] : '';
 
-        const existingIndex = database.findIndex(item => item.guia === guia);
+                const existingIndex = database.findIndex(item => item.guia === guia);
+                
+                if (existingIndex === -1) {
+                    database.push({ guia, manifiesto, descripcion, ciudad });
+                } else {
+                    database[existingIndex] = { guia, manifiesto, descripcion, ciudad };
+                }
+            }
 
-        if (existingIndex === -1) {
-          database.push({
-            guia,
-            manifiesto,
-            descripcion,
-            ciudad
-          });
-        } else {
-          database[existingIndex] = {
-            guia,
-            manifiesto,
-            descripcion,
-            ciudad: ciudad || database[existingIndex].ciudad || ''
-          };
+            await saveToFirestore();
+            loadData();
+            alert(`Importadas ${jsonData.length - 1} guías`);
+        } catch (error) {
+            console.error("Error en importación:", error);
+            alert("Error al importar. Verifica el formato del Excel.");
+        } finally {
+            hideLoading();
+            fileInput.value = '';
         }
-      }
-
-      await saveToFirestore();
-      loadData();
-      alert(`Importadas ${jsonData.length - 1} guías correctamente`);
-    } catch (error) {
-      console.error("Error en importación:", error);
-      alert("Error al importar. Verifica el formato del Excel.");
-    } finally {
-      hideLoading();
-      fileInput.value = '';
-    }
-  };
-  reader.readAsArrayBuffer(file);
-}
-
-async function deleteItem(button) {
-  if (!confirm('¿Está seguro que desea eliminar este item?')) return;
-  
-  const row = button.closest('tr');
-  const guia = row.cells[0].textContent;
-  
-  database = database.filter(item => item.guia !== guia);
-  
-  try {
-    await saveToFirestore();
-    row.remove();
-    updateCounter();
-  } catch (error) {
-    alert('Error al eliminar el item');
-    console.error(error);
-  }
-}
-
-async function liberarFromRow(button) {
-  const row = button.closest('tr');
-  const guia = row.cells[0].textContent;
-  
-  const index = database.findIndex(item => item.guia === guia);
-  if(index !== -1) {
-    const ciudadActual = database[index].ciudad;
-    database[index] = {
-      ...database[index],
-      descripcion: "LIBERAR",
-      ciudad: ciudadActual
     };
-    
-    try {
-      await saveToFirestore();
-      loadData();
-    } catch (error) {
-      alert('Error al liberar el item');
-      console.error(error);
-    }
-  }
-  
-  toggleActionMenu(button.closest('.action-trigger').querySelector('button'));
+    reader.readAsArrayBuffer(file);
 }
 
 /*****************************
  * FUNCIONES AUXILIARES *
  *****************************/
 function showLoading() {
-  document.getElementById('loading').style.display = 'flex';
+    document.getElementById('loading').style.display = 'flex';
 }
 
 function hideLoading() {
-  document.getElementById('loading').style.display = 'none';
+    document.getElementById('loading').style.display = 'none';
 }
 
 function updateCounter() {
-  const count = database.length;
-  document.getElementById('itemCounter').textContent = `${count} ${count === 1 ? 'item' : 'items'}`;
+    const count = database.length;
+    document.getElementById('itemCounter').textContent = `${count} ${count === 1 ? 'item' : 'items'}`;
 }
 
 function toggleActionMenu(button) {
-  const menu = button.nextElementSibling;
-  menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    const menu = button.nextElementSibling;
+    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
 }
 
 function filterTable() {
-  const input = document.getElementById('searchInput');
-  const filter = input.value.toUpperCase();
-  const table = document.getElementById('pizarra-table');
-  const tr = table.getElementsByTagName('tr');
-  
-  for (let i = 1; i < tr.length; i++) {
-    const td = tr[i].getElementsByTagName('td')[0];
-    if (td) {
-      const txtValue = td.textContent || td.innerText;
-      tr[i].style.display = txtValue.toUpperCase().indexOf(filter) > -1 ? "" : "none";
-    }       
-  }
+    const input = document.getElementById('searchInput');
+    const filter = input.value.toUpperCase();
+    const table = document.getElementById('pizarra-table');
+    const tr = table.getElementsByTagName('tr');
+    
+    for (let i = 1; i < tr.length; i++) {
+        const td = tr[i].getElementsByTagName('td')[0];
+        if (td) {
+            const txtValue = td.textContent || td.innerText;
+            tr[i].style.display = txtValue.toUpperCase().indexOf(filter) > -1 ? "" : "none";
+        }       
+    }
 }
 
 /*****************************
- * EVENT LISTENERS *
+ * INICIALIZACIÓN *
  *****************************/
-document.addEventListener('click', function(e) {
-  if(!e.target.closest('.action-trigger')) {
-    document.querySelectorAll('.action-menu').forEach(menu => {
-      menu.style.display = 'none';
-    });
-  }
-  
-  const modals = ['addModal', 'assignModal', 'editModal'];
-  modals.forEach(modalId => {
-    if (e.target == document.getElementById(modalId)) {
-      document.getElementById(modalId).style.display = 'none';
-    }
-  });
+document.addEventListener('DOMContentLoaded', () => {
+    initAuthStateListener();
 });
 
-document.addEventListener('DOMContentLoaded', () => {
-  initAuthStateListener();
+document.addEventListener('click', function(e) {
+    // Cerrar menús de acción al hacer clic fuera
+    if (!e.target.closest('.action-trigger')) {
+        document.querySelectorAll('.action-menu').forEach(menu => {
+            menu.style.display = 'none';
+        });
+    }
+    
+    // Cerrar modales al hacer clic fuera
+    if (e.target.classList.contains('modal')) {
+        e.target.style.display = 'none';
+    }
 });
