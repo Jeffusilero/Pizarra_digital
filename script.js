@@ -345,10 +345,12 @@ async function handleFileImport(fileInput) {
       const data = new Uint8Array(e.target.result);
       const workbook = XLSX.read(data, { type: 'array' });
       const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: ['guia', 'manifiesto', 'descripcion'] });
-
+      
+      // Convertir a JSON usando el rango de datos (ignorando posibles headers)
+      const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: ['A', 'B', 'C'], range: 1 });
+      
       if (!jsonData || jsonData.length === 0) {
-        throw new Error('El archivo está vacío o no tiene el formato correcto');
+        throw new Error('El archivo está vacío');
       }
 
       let importedCount = 0;
@@ -357,33 +359,18 @@ async function handleFileImport(fileInput) {
       for (let i = 0; i < jsonData.length; i++) {
         const rowData = jsonData[i];
         
+        // Obtener valores de las columnas A, B, C
+        const guia = (rowData.A || '').toString().trim();
+        const manifiesto = (rowData.B || '').toString().trim();
+        const descripcion = (rowData.C || '').toString().trim().toUpperCase();
+
         // Validar campos mínimos
-        if (!rowData.guia || !rowData.manifiesto || !rowData.descripcion) {
-          errors.push(`Fila ${i + 1}: Faltan datos obligatorios`);
+        if (!guia || !manifiesto || !descripcion) {
+          errors.push(`Fila ${i + 2}: Faltan datos obligatorios`);
           continue;
         }
 
-        const guia = rowData.guia.toString().trim();
-        const manifiesto = rowData.manifiesto.toString().trim();
-        const descripcion = rowData.descripcion.toString().trim().toUpperCase();
-
-        // Validar descripción
-        const descripcionesValidas = [
-          'RETENER', 
-          'EDITAR DESTINATARIO', 
-          'EDITAR DIRECCION', 
-          'EDITAR CIUDAD', 
-          'EDITAR TELEFONO', 
-          'EDITAR TODO', 
-          'LIBERAR'
-        ];
-        
-        if (!descripcionesValidas.includes(descripcion)) {
-          errors.push(`Fila ${i + 1}: Descripción no válida "${descripcion}"`);
-          continue;
-        }
-
-        // Obtener ciudad de manifest si existe
+        // Obtener ciudad de manifest si existe y es RETENER
         const ciudad = (descripcion === "RETENER" && manifestAssignments[manifiesto]) ? manifestAssignments[manifiesto] : '';
 
         const existingIndex = database.findIndex(item => item.guia === guia);
@@ -411,13 +398,13 @@ async function handleFileImport(fileInput) {
       loadData();
       
       if (errors.length > 0) {
-        alert(`Importadas ${importedCount} guías correctamente, pero con ${errors.length} errores.\n\nErrores:\n${errors.join('\n')}`);
+        alert(`Importadas ${importedCount} guías correctamente, pero con ${errors.length} errores en filas específicas.`);
       } else {
         alert(`Importadas ${importedCount} guías correctamente`);
       }
     } catch (error) {
       console.error("Error en importación:", error);
-      alert(`Error al importar: ${error.message}\n\nAsegúrate que el Excel tenga al menos 3 columnas:\n1. GUIA\n2. MANIFIESTO\n3. DESCRIPCION`);
+      alert(`Error al importar: ${error.message}\n\nFormato esperado:\nColumna A: GUIA\nColumna B: MANIFIESTO\nColumna C: DESCRIPCION`);
     } finally {
       hideLoading();
       fileInput.value = '';
