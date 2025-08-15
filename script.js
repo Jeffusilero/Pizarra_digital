@@ -145,34 +145,36 @@ function loadData() {
   
   database.forEach(item => {
     const newRow = tableBody.insertRow();
+    let descClass = '';
+    let ciudadClass = '';
     
-    // Celda de descripción
-    const descCell = newRow.insertCell(2);
-    descCell.className = item.descripcion === "RETENER" ? 'retener' : '';
-    descCell.textContent = item.descripcion;
+    // Mostrar siempre el valor de la ciudad (aunque esté vacío)
+    const ciudadValue = item.ciudad || ''; 
     
-    // Celda de ciudad
-    const ciudadCell = newRow.insertCell(3);
-    if(item.ciudad) {
-      ciudadCell.textContent = item.ciudad;
-      if(item.descripcion === "RETENER") {
-        if(item.ciudad === "GYE") {
-          descCell.classList.add('retener-amarillo');
-          ciudadCell.classList.add('retener-amarillo');
-        } else if(item.ciudad === "QUT") {
-          descCell.classList.add('retener-naranja');
-          ciudadCell.classList.add('retener-naranja');
-        }
+    if(item.descripcion === "RETENER") {
+      // Descripción SIEMPRE en rojo
+      descClass = 'retener';
+      
+      // Ciudad siempre visible pero con fondo blanco inicialmente
+      ciudadClass = '';
+      
+      // Solo aplicar color si está asignada explícitamente
+      if(item.ciudad && item.ciudad.trim() !== '') {
+        ciudadClass = item.ciudad === "GYE" ? 'retener-amarillo' : 'retener-naranja';
       }
     }
+    else if(item.descripcion === "LIBERAR") {
+      descClass = 'liberar';
+      ciudadClass = 'liberar';
+    }
     
-    // Resto de celdas
-    newRow.insertCell(0).textContent = item.guia;
-    newRow.insertCell(1).textContent = item.manifiesto;
-    
-    // Celda de acciones
-    const actionCell = newRow.insertCell(4);
-    actionCell.innerHTML = generateActionButtons(item.descripcion, item.guia);
+    newRow.innerHTML = `
+      <td>${item.guia}</td>
+      <td>${item.manifiesto}</td>
+      <td class="${descClass}">${item.descripcion}</td>
+      <td class="${ciudadClass}">${ciudadValue}</td>
+      <td>${generateActionButtons(item.descripcion)}</td>
+    `;
   });
   updateCounter();
 }
@@ -232,33 +234,19 @@ async function assignFromRow(button) {
   
   if (manifestAssignments[manifiesto]) {
     const ciudad = manifestAssignments[manifiesto];
-    const index = database.findIndex(item => item.guia === guia);
     
+    const index = database.findIndex(item => item.guia === guia);
     if (index !== -1) {
-      database[index].ciudad = ciudad;
+      // Actualizamos ambos: ciudad y manteniendo RETENER
+      database[index] = {
+        ...database[index],
+        ciudad: ciudad,
+        descripcion: "RETENER" // Aseguramos que siga siendo RETENER
+      };
       
       try {
         await saveToFirestore();
-        
-        // Actualizar colores
-        const descCell = row.cells[2];
-        const ciudadCell = row.cells[3];
-        
-        // Resetear clases primero
-        descCell.className = 'retener';
-        ciudadCell.className = '';
-        
-        // Aplicar nuevos colores
-        if(ciudad === 'GYE') {
-          descCell.classList.add('retener-amarillo');
-          ciudadCell.classList.add('retener-amarillo');
-        } else if(ciudad === 'QUT') {
-          descCell.classList.add('retener-naranja');
-          ciudadCell.classList.add('retener-naranja');
-        }
-        
-        ciudadCell.textContent = ciudad;
-        
+        loadData(); // Esto aplicará los colores correctamente
       } catch (error) {
         console.error(error);
       }
