@@ -155,31 +155,28 @@ function loadData() {
   database.forEach(item => {
     const newRow = tableBody.insertRow();
     
+    // Celdas básicas
     newRow.insertCell(0).textContent = item.guia;
     newRow.insertCell(1).textContent = item.manifiesto;
     
+    // Celda de descripción
     const descCell = newRow.insertCell(2);
     descCell.textContent = item.descripcion;
     
+    // Celda de ciudad
     const ciudadCell = newRow.insertCell(3);
     ciudadCell.textContent = item.ciudad || '';
     
-    // Aplicamos los estilos según el estado guardado
+    // Aplicar estilos iniciales
     if (item.descripcion === "RETENER") {
-      if (item.ciudad === "GYE") {
-        descCell.className = 'retener-amarillo';
-        ciudadCell.className = 'ciudad-amarilla';
-      } else if (item.ciudad === "QUT") {
-        descCell.className = 'retener-naranja';
-        ciudadCell.className = 'ciudad-naranja';
-      } else {
-        descCell.className = 'retener';
-      }
+      descCell.className = 'retener';
+      ciudadCell.className = '';
     } else if (item.descripcion === "LIBERAR") {
       descCell.className = 'liberar';
       ciudadCell.className = 'liberar';
     }
     
+    // Acciones
     const actionCell = newRow.insertCell(4);
     actionCell.innerHTML = generateActionButtons(item.descripcion, item.guia);
   });
@@ -238,46 +235,34 @@ function closeEditModal() {
 async function assignFromRow(button, guia) {
   const row = button.closest('tr');
   const manifiesto = row.cells[1].textContent;
+  const index = database.findIndex(item => item.guia === guia);
   
-  if (manifestAssignments[manifiesto]) {
+  if (index !== -1 && manifestAssignments[manifiesto]) {
     const ciudad = manifestAssignments[manifiesto];
-    const index = database.findIndex(item => item.guia === guia);
+    database[index].ciudad = ciudad;
     
-    if (index !== -1) {
-      // Actualizamos el objeto completo en la base de datos
-      database[index] = {
-        guia: database[index].guia,
-        manifiesto: database[index].manifiesto,
-        descripcion: "RETENER", // Mantenemos como RETENER
-        ciudad: ciudad // Asignamos la nueva ciudad
-      };
+    try {
+      await saveToFirestore();
       
-      try {
-        // Guardamos en Firestore
-        const success = await saveToFirestore();
-        
-        if (success) {
-          // Actualizamos la interfaz
-          const descCell = row.cells[2];
-          const ciudadCell = row.cells[3];
-          
-          ciudadCell.textContent = ciudad;
-          
-          if (ciudad === "GYE") {
-            descCell.className = 'retener-amarillo';
-            ciudadCell.className = 'ciudad-amarilla';
-          } else if (ciudad === "QUT") {
-            descCell.className = 'retener-naranja';
-            ciudadCell.className = 'ciudad-naranja';
-          }
-        }
-      } catch (error) {
-        console.error("Error al asignar:", error);
-        alert("Error al guardar la asignación. Intente nuevamente.");
+      const descCell = row.cells[2];
+      const ciudadCell = row.cells[3];
+      
+      ciudadCell.textContent = ciudad;
+      
+      // Aplicar estilos de asignación
+      if (ciudad === "GYE") {
+        descCell.className = 'retener-amarillo';
+        ciudadCell.className = 'ciudad-amarilla';
+      } else if (ciudad === "QUT") {
+        descCell.className = 'retener-naranja';
+        ciudadCell.className = 'ciudad-naranja';
       }
+      
+    } catch (error) {
+      console.error("Error al asignar:", error);
     }
   } else {
-    alert('Este manifiesto no tiene ciudad asignada. Use el botón "Asignar Manifiesto" primero.');
+    alert('Manifiesto no tiene ciudad asignada. Use "Asignar Manifiesto" primero.');
   }
   
   toggleActionMenu(button.closest('.action-trigger').querySelector('button'));
