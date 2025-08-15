@@ -185,7 +185,6 @@ function loadData() {
           ciudadCell.className = 'ciudad-blanca';
         }
       } else {
-        ciudadCell.textContent = '';
         ciudadCell.className = 'ciudad-blanca';
       }
     } else {

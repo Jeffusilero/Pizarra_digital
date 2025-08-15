@@ -41,7 +41,7 @@ th {
 
 /* Ciudad inicial - Sin fondo, texto negro */
 .ciudad-blanca {
-  background-color: white !important;
+  background-color: transparent !important;
   color: black !important;
   font-weight: bold;
 }
