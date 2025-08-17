@@ -167,13 +167,25 @@ function loadData() {
     const ciudadCell = newRow.insertCell(3);
     ciudadCell.textContent = item.ciudad || '';
     
-    // Aplicar estilos iniciales
-    if (item.descripcion === "RETENER") {
-      descCell.className = 'retener';
-      ciudadCell.className = '';
-    } else if (item.descripcion === "LIBERAR") {
+    // Aplicar estilos basados en descripción y ciudad
+    if (item.descripcion === "LIBERAR") {
       descCell.className = 'liberar';
       ciudadCell.className = 'liberar';
+    } else if (item.descripcion === "RETENER") {
+      if (item.ciudad === "GYE") {
+        descCell.className = 'retener-amarillo';
+        ciudadCell.className = 'ciudad-amarilla';
+      } else if (item.ciudad === "QUT") {
+        descCell.className = 'retener-naranja';
+        ciudadCell.className = 'ciudad-naranja';
+      } else {
+        descCell.className = 'retener';
+        ciudadCell.className = '';
+      }
+    } else {
+      // Para otras descripciones (EDITAR...)
+      descCell.className = '';
+      ciudadCell.className = '';
     }
     
     // Acciones
