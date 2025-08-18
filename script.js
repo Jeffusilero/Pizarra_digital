@@ -166,8 +166,19 @@ function loadData() {
     // Celda de ciudad (vacía para RETENER, visible para otros)
     const ciudadCell = newRow.insertCell(3);
     if (item.descripcion === "RETENER") {
-      ciudadCell.textContent = ''; // Celda vacía para RETENER
-      descCell.className = 'retener'; // Fondo rojo, texto blanco
+      // Solo mostrar ciudad si ya está asignada
+      ciudadCell.textContent = item.ciudad || '';
+      
+      // Aplicar estilos según ciudad asignada
+      if (item.ciudad === "GYE") {
+        descCell.className = 'retener-amarillo';
+        ciudadCell.className = 'ciudad-amarilla';
+      } else if (item.ciudad === "QUT") {
+        descCell.className = 'retener-naranja';
+        ciudadCell.className = 'ciudad-naranja';
+      } else {
+        descCell.className = 'retener'; // Estado inicial RETENER (rojo)
+      }
     } else {
       ciudadCell.textContent = item.ciudad || '';
       if (item.descripcion === "LIBERAR") {
@@ -220,21 +231,7 @@ async function assignFromRow(button, guia) {
     
     try {
       await saveToFirestore();
-      
-      const descCell = row.cells[2];
-      const ciudadCell = row.cells[3];
-      
-      ciudadCell.textContent = ciudad;
-      
-      // Aplicar estilos de asignación
-      if (ciudad === "GYE") {
-        descCell.className = 'retener-amarillo';
-        ciudadCell.className = 'ciudad-amarilla';
-      } else if (ciudad === "QUT") {
-        descCell.className = 'retener-naranja';
-        ciudadCell.className = 'ciudad-naranja';
-      }
-      
+      loadData(); // Recargar toda la tabla para aplicar estilos
     } catch (error) {
       console.error("Error al asignar:", error);
     }
@@ -256,12 +253,8 @@ async function assignManifest() {
 
   manifestAssignments[manifiesto] = ciudad;
   
-  // Actualizar todas las guías con este manifiesto
-  database.forEach(item => {
-    if (item.manifiesto === manifiesto && item.descripcion === "RETENER") {
-      item.ciudad = ciudad;
-    }
-  });
+  // No actualizamos automáticamente las guías con este manifiesto
+  // La asignación se hará solo cuando se haga clic en "Asignar" para cada guía
   
   if (await saveToFirestore()) {
     loadData();
@@ -371,7 +364,6 @@ async function handleFileImport(fileInput) {
   reader.readAsArrayBuffer(file);
 }
 
-
 async function deleteItem(button) {
   if (!confirm('¿Está seguro que desea eliminar este item?')) return;
   
@@ -447,6 +439,33 @@ function filterTable() {
       tr[i].style.display = txtValue.toUpperCase().indexOf(filter) > -1 ? "" : "none";
     }       
   }
+}
+
+/*****************************
+ * MODAL FUNCTIONS *
+ *****************************/
+function openAddModal() {
+  document.getElementById('addModal').style.display = 'block';
+}
+
+function closeAddModal() {
+  document.getElementById('addModal').style.display = 'none';
+}
+
+function openAssignModal() {
+  document.getElementById('assignModal').style.display = 'block';
+}
+
+function closeAssignModal() {
+  document.getElementById('assignModal').style.display = 'none';
+}
+
+function openEditModal() {
+  document.getElementById('editModal').style.display = 'block';
+}
+
+function closeEditModal() {
+  document.getElementById('editModal').style.display = 'none';
 }
 
 /*****************************
