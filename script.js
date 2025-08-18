@@ -157,23 +157,38 @@ function loadData() {
     
     // Celdas básicas
     newRow.insertCell(0).textContent = item.guia;
-    newRow.insertCell(1).textContent = item.manifiesto;
+    
+    // Celda de manifiesto con estilo según ciudad asignada
+    const manifiestoCell = newRow.insertCell(1);
+    manifiestoCell.textContent = item.manifiesto;
+    
+    // Aplicar estilo al manifiesto si está asignado
+    if (manifestAssignments[item.manifiesto]) {
+      if (manifestAssignments[item.manifiesto] === "GYE") {
+        manifiestoCell.className = 'manifest-gye';
+      } else if (manifestAssignments[item.manifiesto] === "QUT") {
+        manifiestoCell.className = 'manifest-qut';
+      }
+    }
     
     // Celda de descripción
     const descCell = newRow.insertCell(2);
     descCell.textContent = item.descripcion;
     
-    // Celda de ciudad
+    // Celda de ciudad (vacía inicialmente para RETENER)
     const ciudadCell = newRow.insertCell(3);
-    ciudadCell.textContent = item.ciudad || '';
+    if (item.descripcion === "RETENER") {
+      ciudadCell.textContent = '';
+    } else {
+      ciudadCell.textContent = item.ciudad || '';
+    }
     
     // Aplicar estilos iniciales
     if (item.descripcion === "RETENER") {
       descCell.className = 'retener';
-      ciudadCell.className = '';
     } else if (item.descripcion === "LIBERAR") {
       descCell.className = 'liberar';
-      ciudadCell.className = 'liberar';
+      ciudadCell.className = 'ciudad-liberada';
     }
     
     // Acciones
@@ -279,8 +294,9 @@ async function assignManifest() {
 
   manifestAssignments[manifiesto] = ciudad;
   
+  // Actualizar todas las guías con este manifiesto
   database.forEach(item => {
-    if (item.manifiesto === manifiesto && item.descripcion === "RETENER") {
+    if (item.manifiesto === manifiesto) {
       item.ciudad = ciudad;
     }
   });
@@ -302,6 +318,14 @@ async function addItem() {
     return;
   }
 
+  // Verificar si la guía ya existe
+  const existingIndex = database.findIndex(item => item.guia === guia);
+  
+  if (existingIndex !== -1) {
+    alert('Esta guía ya existe en la base de datos');
+    return;
+  }
+
   // Obtener ciudad asignada al manifiesto (si existe y es RETENER)
   const ciudad = manifestAssignments[manifiesto] || '';
   
@@ -309,7 +333,7 @@ async function addItem() {
     guia: guia,
     manifiesto: manifiesto,
     descripcion: descripcion,
-    ciudad: ciudad
+    ciudad: descripcion === "RETENER" ? '' : ciudad
   });
   
   try {
@@ -348,24 +372,27 @@ async function handleFileImport(fileInput) {
         
         if (!guia || !manifiesto || !descripcion) continue;
 
+        // Verificar si la guía ya existe
+        const existingIndex = database.findIndex(item => item.guia === guia);
+        
         // Obtener ciudad asignada al manifiesto (si existe y es RETENER)
-            const ciudad = manifestAssignments[manifiesto] || '';
+        const ciudad = manifestAssignments[manifiesto] || '';
       
-      if (existingIndex === -1) {
-        database.push({
-          guia,
-          manifiesto,
-          descripcion,
-          ciudad
-        });
-      } else {
-        database[existingIndex] = {
-          guia,
-          manifiesto,
-          descripcion,
-          ciudad: ciudad || database[existingIndex].ciudad || ''
-        };
-      }
+        if (existingIndex === -1) {
+          database.push({
+            guia,
+            manifiesto,
+            descripcion,
+            ciudad: descripcion === "RETENER" ? '' : ciudad
+          });
+        } else {
+          database[existingIndex] = {
+            guia,
+            manifiesto,
+            descripcion,
+            ciudad: descripcion === "RETENER" ? '' : (ciudad || database[existingIndex].ciudad || '')
+          };
+        }
       }
 
       await saveToFirestore();
