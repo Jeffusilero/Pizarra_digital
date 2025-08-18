@@ -155,25 +155,48 @@ function loadData() {
   database.forEach(item => {
     const newRow = tableBody.insertRow();
     
-    // Celdas básicas
+    // Celda GUIA
     newRow.insertCell(0).textContent = item.guia;
-    newRow.insertCell(1).textContent = item.manifiesto;
     
-    // Celda de descripción
+    // Celda MANIFIESTO
+    const manifiestoCell = newRow.insertCell(1);
+    manifiestoCell.textContent = item.manifiesto;
+    
+    // Aplicar estilo al MANIFIESTO según asignación
+    if (manifestAssignments[item.manifiesto]) {
+      if (manifestAssignments[item.manifiesto] === "GYE") {
+        manifiestoCell.className = 'manifiesto-gye';
+      } else if (manifestAssignments[item.manifiesto] === "QUT") {
+        manifiestoCell.className = 'manifiesto-qut';
+      }
+    }
+    
+    // Celda DESCRIPCION
     const descCell = newRow.insertCell(2);
     descCell.textContent = item.descripcion;
     
-    // Celda de ciudad
+    // Celda CIUDAD
     const ciudadCell = newRow.insertCell(3);
     ciudadCell.textContent = item.ciudad || '';
     
     // Aplicar estilos iniciales
     if (item.descripcion === "RETENER") {
       descCell.className = 'retener';
-      ciudadCell.className = '';
+      if (!item.ciudad) {
+        ciudadCell.className = 'ciudad-sin-asignar';
+      }
     } else if (item.descripcion === "LIBERAR") {
       descCell.className = 'liberar';
       ciudadCell.className = 'liberar';
+    }
+    
+    // Estilos para ciudad asignada
+    if (item.ciudad === "GYE") {
+      descCell.className = 'retener-amarillo';
+      ciudadCell.className = 'ciudad-amarilla';
+    } else if (item.ciudad === "QUT") {
+      descCell.className = 'retener-naranja';
+      ciudadCell.className = 'ciudad-naranja';
     }
     
     // Acciones
@@ -246,6 +269,7 @@ async function assignFromRow(button, guia) {
       
       const descCell = row.cells[2];
       const ciudadCell = row.cells[3];
+      const manifiestoCell = row.cells[1];
       
       ciudadCell.textContent = ciudad;
       
@@ -253,9 +277,11 @@ async function assignFromRow(button, guia) {
       if (ciudad === "GYE") {
         descCell.className = 'retener-amarillo';
         ciudadCell.className = 'ciudad-amarilla';
+        manifiestoCell.className = 'manifiesto-gye';
       } else if (ciudad === "QUT") {
         descCell.className = 'retener-naranja';
         ciudadCell.className = 'ciudad-naranja';
+        manifiestoCell.className = 'manifiesto-qut';
       }
       
     } catch (error) {
@@ -279,6 +305,7 @@ async function assignManifest() {
 
   manifestAssignments[manifiesto] = ciudad;
   
+  // Actualizar todos los items con este manifiesto
   database.forEach(item => {
     if (item.manifiesto === manifiesto && item.descripcion === "RETENER") {
       item.ciudad = ciudad;
@@ -303,7 +330,7 @@ async function addItem() {
   }
 
   // Obtener ciudad asignada al manifiesto (si existe y es RETENER)
-  const ciudad = manifestAssignments[manifiesto] || '';
+  const ciudad = (descripcion === "RETENER" && manifestAssignments[manifiesto]) ? manifestAssignments[manifiesto] : '';
   
   database.push({
     guia: guia,
@@ -348,24 +375,25 @@ async function handleFileImport(fileInput) {
         
         if (!guia || !manifiesto || !descripcion) continue;
 
-        // Obtener ciudad asignada al manifiesto (si existe y es RETENER)
-            const ciudad = manifestAssignments[manifiesto] || '';
+        // Verificar si ya existe
+        const existingIndex = database.findIndex(item => item.guia === guia);
+        const ciudad = (descripcion === "RETENER" && manifestAssignments[manifiesto]) ? manifestAssignments[manifiesto] : '';
       
-      if (existingIndex === -1) {
-        database.push({
-          guia,
-          manifiesto,
-          descripcion,
-          ciudad
-        });
-      } else {
-        database[existingIndex] = {
-          guia,
-          manifiesto,
-          descripcion,
-          ciudad: ciudad || database[existingIndex].ciudad || ''
-        };
-      }
+        if (existingIndex === -1) {
+          database.push({
+            guia,
+            manifiesto,
+            descripcion,
+            ciudad
+          });
+        } else {
+          database[existingIndex] = {
+            guia,
+            manifiesto,
+            descripcion,
+            ciudad: ciudad || database[existingIndex].ciudad || ''
+          };
+        }
       }
 
       await saveToFirestore();

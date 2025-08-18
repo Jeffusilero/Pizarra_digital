@@ -61,26 +61,18 @@ td {
   color: black !important;            /* Texto negro */
 }
 
-/* RETENER ASIGNADO A GYE */
-.retener-amarillo {
-  background-color: #ffff00 !important; /* Fondo amarillo */
-  color: black !important;             /* Texto negro */
-  font-weight: bold;
-}
-
+/* MANIFIESTO Y RETENER ASIGNADO A GYE */
+.manifiesto-gye,
+.retener-amarillo,
 .ciudad-amarilla {
   background-color: #ffff00 !important; /* Fondo amarillo */
   color: black !important;             /* Texto negro */
   font-weight: bold;
 }
 
-/* RETENER ASIGNADO A QUT */
-.retener-naranja {
-  background-color: #ffa500 !important; /* Fondo naranja */
-  color: white !important;             /* Texto blanco */
-  font-weight: bold;
-}
-
+/* MANIFIESTO Y RETENER ASIGNADO A QUT */
+.manifiesto-qut,
+.retener-naranja,
 .ciudad-naranja {
   background-color: #ffa500 !important; /* Fondo naranja */
   color: white !important;             /* Texto blanco */
@@ -88,12 +80,7 @@ td {
 }
 
 /* ESTADO LIBERAR */
-.liberar {
-  background-color: #00C851 !important; /* Fondo verde */
-  color: white !important;             /* Texto blanco */
-  font-weight: bold;
-}
-
+.liberar,
 .ciudad-liberada {
   background-color: #00C851 !important; /* Fondo verde */
   color: white !important;             /* Texto blanco */
