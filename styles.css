@@ -65,7 +65,7 @@ td {
 /* MANIFIESTO QUT */
 .manifest-qut {
   background-color: #ffa500 !important; /* Fondo naranja */
-  color: white !important;             /* Texto blanco */
+  color: black !important;             /* Texto blanco */
   font-weight: bold;
 }
 
