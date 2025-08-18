@@ -108,19 +108,7 @@ async function loadFromFirestore() {
       return { database: [], manifest: {} };
     }
     
-    const data = doc.data();
-    
-    // Sincronizar TODOS los items con manifest
-    if (data.database && data.manifest) {
-      data.database = data.database.map(item => {
-        if (data.manifest[item.manifiesto]) {
-          return { ...item, ciudad: data.manifest[item.manifiesto] };
-        }
-        return item;
-      });
-    }
-    
-    return data;
+    return doc.data();
   } catch (error) {
     console.error("Error en loadFromFirestore:", error);
     throw error;
@@ -175,20 +163,17 @@ function loadData() {
     const descCell = newRow.insertCell(2);
     descCell.textContent = item.descripcion;
     
-    // Celda de ciudad (vacía inicialmente para RETENER)
+    // Celda de ciudad (vacía para RETENER, visible para otros)
     const ciudadCell = newRow.insertCell(3);
     if (item.descripcion === "RETENER") {
-      ciudadCell.textContent = '';
+      ciudadCell.textContent = ''; // Celda vacía para RETENER
+      descCell.className = 'retener'; // Fondo rojo, texto blanco
     } else {
       ciudadCell.textContent = item.ciudad || '';
-    }
-    
-    // Aplicar estilos iniciales
-    if (item.descripcion === "RETENER") {
-      descCell.className = 'retener';
-    } else if (item.descripcion === "LIBERAR") {
-      descCell.className = 'liberar';
-      ciudadCell.className = 'ciudad-liberada';
+      if (item.descripcion === "LIBERAR") {
+        descCell.className = 'liberar';
+        ciudadCell.className = 'ciudad-liberada';
+      }
     }
     
     // Acciones
@@ -219,29 +204,6 @@ function generateActionButtons(descripcion, guia) {
       <button class="btn-action btn-gray" onclick="deleteItem(this)">Eliminar</button>
     </div>
   `;
-}
-
-/*****************************
- * FUNCIONES DE MODALES *
- *****************************/
-function openAddModal() {
-  document.getElementById('addModal').style.display = 'block';
-}
-
-function closeAddModal() {
-  document.getElementById('addModal').style.display = 'none';
-}
-
-function openAssignModal() {
-  document.getElementById('assignModal').style.display = 'block';
-}
-
-function closeAssignModal() {
-  document.getElementById('assignModal').style.display = 'none';
-}
-
-function closeEditModal() {
-  document.getElementById('editModal').style.display = 'none';
 }
 
 /*****************************
@@ -296,7 +258,7 @@ async function assignManifest() {
   
   // Actualizar todas las guías con este manifiesto
   database.forEach(item => {
-    if (item.manifiesto === manifiesto) {
+    if (item.manifiesto === manifiesto && item.descripcion === "RETENER") {
       item.ciudad = ciudad;
     }
   });
@@ -326,14 +288,14 @@ async function addItem() {
     return;
   }
 
-  // Obtener ciudad asignada al manifiesto (si existe y es RETENER)
-  const ciudad = manifestAssignments[manifiesto] || '';
+  // Para RETENER no asignamos ciudad inicialmente
+  const ciudad = descripcion === "RETENER" ? '' : (manifestAssignments[manifiesto] || '');
   
   database.push({
     guia: guia,
     manifiesto: manifiesto,
     descripcion: descripcion,
-    ciudad: descripcion === "RETENER" ? '' : ciudad
+    ciudad: ciudad
   });
   
   try {
@@ -375,15 +337,15 @@ async function handleFileImport(fileInput) {
         // Verificar si la guía ya existe
         const existingIndex = database.findIndex(item => item.guia === guia);
         
-        // Obtener ciudad asignada al manifiesto (si existe y es RETENER)
-        const ciudad = manifestAssignments[manifiesto] || '';
+        // Para RETENER no asignamos ciudad inicialmente
+        const ciudad = descripcion === "RETENER" ? '' : (manifestAssignments[manifiesto] || '');
       
         if (existingIndex === -1) {
           database.push({
             guia,
             manifiesto,
             descripcion,
-            ciudad: descripcion === "RETENER" ? '' : ciudad
+            ciudad
           });
         } else {
           database[existingIndex] = {
@@ -408,6 +370,7 @@ async function handleFileImport(fileInput) {
   };
   reader.readAsArrayBuffer(file);
 }
+
 
 async function deleteItem(button) {
   if (!confirm('¿Está seguro que desea eliminar este item?')) return;
