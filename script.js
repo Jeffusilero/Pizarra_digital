@@ -163,13 +163,14 @@ function loadData() {
     const descCell = newRow.insertCell(2);
     descCell.textContent = item.descripcion;
     
-    // Celda de ciudad (vacía para RETENER, visible para otros)
+    // Celda de ciudad
     const ciudadCell = newRow.insertCell(3);
+    
+    // Aplicar estilos según el estado
     if (item.descripcion === "RETENER") {
-      // Solo mostrar ciudad si ya está asignada
       ciudadCell.textContent = item.ciudad || '';
       
-      // Aplicar estilos según ciudad asignada
+      // Aplicar estilos según si tiene ciudad asignada o no
       if (item.ciudad === "GYE") {
         descCell.className = 'retener-amarillo';
         ciudadCell.className = 'ciudad-amarilla';
@@ -177,14 +178,14 @@ function loadData() {
         descCell.className = 'retener-naranja';
         ciudadCell.className = 'ciudad-naranja';
       } else {
-        descCell.className = 'retener'; // Estado inicial RETENER (rojo)
+        descCell.className = 'retener';
       }
+    } else if (item.descripcion === "LIBERAR") {
+      ciudadCell.textContent = item.ciudad || '';
+      descCell.className = 'liberar';
+      ciudadCell.className = 'ciudad-liberada';
     } else {
       ciudadCell.textContent = item.ciudad || '';
-      if (item.descripcion === "LIBERAR") {
-        descCell.className = 'liberar';
-        ciudadCell.className = 'ciudad-liberada';
-      }
     }
     
     // Acciones
@@ -252,9 +253,6 @@ async function assignManifest() {
   }
 
   manifestAssignments[manifiesto] = ciudad;
-  
-  // No actualizamos automáticamente las guías con este manifiesto
-  // La asignación se hará solo cuando se haga clic en "Asignar" para cada guía
   
   if (await saveToFirestore()) {
     loadData();
