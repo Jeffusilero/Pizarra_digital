@@ -38,6 +38,11 @@ th, td {
 th {
   background-color: #b3b1b1;
   font-weight: bold;
+  cursor: pointer;
+}
+
+th:hover {
+  background-color: #9e9c9c;
 }
 
 /* Celda normal */

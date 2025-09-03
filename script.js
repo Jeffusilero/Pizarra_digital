@@ -4,6 +4,7 @@
 let database = [];
 let manifestAssignments = {};
 let currentEditingRow = null;
+let currentSortOrder = 'none'; // Para controlar el ordenamiento
 
 // Configuración de Firebase
 const firebaseConfig = {
@@ -56,6 +57,11 @@ function initAuthStateListener() {
       console.log("Usuario autenticado:", user.email);
       document.getElementById('mainContainer').style.display = 'block';
       loadAppData();
+      
+      // Agregar event listener para el encabezado de manifiesto
+      document.getElementById('manifiesto-header').addEventListener('click', function() {
+        sortByCity();
+      });
     } else {
       console.log("Usuario no autenticado");
       document.getElementById('mainContainer').style.display = 'none';
@@ -437,6 +443,40 @@ function filterTable() {
       tr[i].style.display = txtValue.toUpperCase().indexOf(filter) > -1 ? "" : "none";
     }       
   }
+}
+
+// Función para ordenar por ciudad (GYE primero, luego QUT)
+function sortByCity() {
+  if (database.length === 0) return;
+  
+  // Cambiar el orden de clasificación
+  if (currentSortOrder === 'city-asc') {
+    currentSortOrder = 'city-desc';
+    database.sort((a, b) => {
+      // Primero ordenar por ciudad: QUT antes que GYE
+      if (a.ciudad === 'QUT' && b.ciudad !== 'QUT') return -1;
+      if (a.ciudad !== 'QUT' && b.ciudad === 'QUT') return 1;
+      if (a.ciudad === 'GYE' && b.ciudad !== 'GYE') return 1;
+      if (a.ciudad !== 'GYE' && b.ciudad === 'GYE') return -1;
+      
+      // Si tienen la misma ciudad, mantener el orden original
+      return 0;
+    });
+  } else {
+    currentSortOrder = 'city-asc';
+    database.sort((a, b) => {
+      // Primero ordenar por ciudad: GYE antes que QUT
+      if (a.ciudad === 'GYE' && b.ciudad !== 'GYE') return -1;
+      if (a.ciudad !== 'GYE' && b.ciudad === 'GYE') return 1;
+      if (a.ciudad === 'QUT' && b.ciudad !== 'QUT') return 1;
+      if (a.ciudad !== 'QUT' && b.ciudad === 'QUT') return -1;
+      
+      // Si tienen la misma ciudad, mantener el orden original
+      return 0;
+    });
+  }
+  
+  loadData();
 }
 
 /*****************************
