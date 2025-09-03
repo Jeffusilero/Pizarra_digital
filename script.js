@@ -4,7 +4,7 @@
 let database = [];
 let manifestAssignments = {};
 let currentEditingRow = null;
-let currentSortOrder = 'none'; // Para controlar el ordenamiento
+let currentSort = { field: null, order: 'none' }; // Para controlar el ordenamiento actual
 
 // Configuración de Firebase
 const firebaseConfig = {
@@ -58,9 +58,17 @@ function initAuthStateListener() {
       document.getElementById('mainContainer').style.display = 'block';
       loadAppData();
       
-      // Agregar event listener para el encabezado de manifiesto
+      // Agregar event listeners para los encabezados ordenables
+      document.getElementById('guia-header').addEventListener('click', function() {
+        sortTable('guia');
+      });
+      
       document.getElementById('manifiesto-header').addEventListener('click', function() {
-        sortByCity();
+        sortTable('manifiesto');
+      });
+      
+      document.getElementById('descripcion-header').addEventListener('click', function() {
+        sortTable('descripcion');
       });
     } else {
       console.log("Usuario no autenticado");
@@ -93,7 +101,14 @@ async function loadAppData() {
     const data = await loadFromFirestore();
     database = data.database || [];
     manifestAssignments = data.manifest || {};
-    loadData();
+    currentSort = data.currentSort || { field: null, order: 'none' }; // Cargar ordenamiento guardado
+    
+    // Aplicar ordenamiento guardado
+    if (currentSort.field && currentSort.order !== 'none') {
+      sortTable(currentSort.field, false); // Ordenar sin guardar (ya que acabamos de cargar)
+    } else {
+      loadData();
+    }
   } catch (error) {
     console.error("Error cargando datos:", error);
     alert("Error al cargar datos. Recarga la página.");
@@ -109,9 +124,10 @@ async function loadFromFirestore() {
     if (!doc.exists) {
       await db.collection("pizarra").doc("datos").set({
         database: [],
-        manifest: {}
+        manifest: {},
+        currentSort: { field: null, order: 'none' }
       });
-      return { database: [], manifest: {} };
+      return { database: [], manifest: {}, currentSort: { field: null, order: 'none' } };
     }
     
     return doc.data();
@@ -126,7 +142,8 @@ async function saveToFirestore() {
   try {
     await db.collection("pizarra").doc("datos").set({
       database: database,
-      manifest: manifestAssignments
+      manifest: manifestAssignments,
+      currentSort: currentSort // Guardar el estado de ordenamiento
     }, { merge: true });
     console.log("Datos guardados correctamente");
     return true;
@@ -200,6 +217,7 @@ function loadData() {
   });
   
   updateCounter();
+  updateSortIndicators(); // Actualizar indicadores de ordenamiento
 }
 
 function generateActionButtons(descripcion, guia) {
@@ -410,6 +428,109 @@ async function liberarFromRow(button) {
 }
 
 /*****************************
+ * FUNCIONES DE ORDENAMIENTO *
+ *****************************/
+function sortTable(field, save = true) {
+  if (database.length === 0) return;
+  
+  // Si ya estamos ordenando por este campo, cambiar la dirección
+  if (currentSort.field === field) {
+    currentSort.order = currentSort.order === 'asc' ? 'desc' : 'asc';
+  } else {
+    // Si es un campo diferente, ordenar ascendente por defecto
+    currentSort.field = field;
+    currentSort.order = 'asc';
+  }
+  
+  // Aplicar el ordenamiento
+  database.sort((a, b) => {
+    let valueA = a[field] || '';
+    let valueB = b[field] || '';
+    
+    // Para ordenamiento numérico si el campo es guía
+    if (field === 'guia') {
+      valueA = valueA.toString();
+      valueB = valueB.toString();
+      
+      // Intentar convertir a números si es posible
+      const numA = parseInt(valueA.replace(/\D/g, '')) || 0;
+      const numB = parseInt(valueB.replace(/\D/g, '')) || 0;
+      
+      if (numA !== numB) {
+        return currentSort.order === 'asc' ? numA - numB : numB - numA;
+      }
+      
+      // Si los valores numéricos son iguales, ordenar alfabéticamente
+      return currentSort.order === 'asc' 
+        ? valueA.localeCompare(valueB) 
+        : valueB.localeCompare(valueA);
+    }
+    
+    // Ordenamiento alfabético para otros campos
+    return currentSort.order === 'asc' 
+      ? valueA.localeCompare(valueB) 
+      : valueB.localeCompare(valueA);
+  });
+  
+  // Actualizar la interfaz
+  loadData();
+  updateSortIndicators();
+  
+  // Guardar en Firestore si se solicita
+  if (save) {
+    saveToFirestore();
+  }
+}
+
+function updateSortIndicators() {
+  // Remover indicadores existentes
+  document.querySelectorAll('.sort-indicator').forEach(indicator => {
+    indicator.textContent = '';
+  });
+  
+  // Agregar indicador al campo actualmente ordenado
+  if (currentSort.field && currentSort.order !== 'none') {
+    const header = document.getElementById(`${currentSort.field}-header`);
+    if (header) {
+      const indicator = header.querySelector('.sort-indicator');
+      if (indicator) {
+        indicator.textContent = currentSort.order === 'asc' ? '↑' : '↓';
+      }
+    }
+  }
+}
+
+function sortByCity() {
+  if (database.length === 0) return;
+  
+  // Cambiar el orden de clasificación
+  if (currentSort.field === 'ciudad' && currentSort.order === 'asc') {
+    currentSort.order = 'desc';
+  } else {
+    currentSort.field = 'ciudad';
+    currentSort.order = 'asc';
+  }
+  
+  database.sort((a, b) => {
+    const ciudadA = a.ciudad || '';
+    const ciudadB = b.ciudad || '';
+    
+    // Primero ordenar por ciudad: GYE antes que QUT
+    if (ciudadA === "GYE" && ciudadB !== "GYE") return -1;
+    if (ciudadA !== "GYE" && ciudadB === "GYE") return 1;
+    if (ciudadA === "QUT" && ciudadB !== "QUT") return -1;
+    if (ciudadA !== "QUT" && ciudadB === "QUT") return 1;
+    
+    // Si tienen la misma ciudad, mantener el orden original
+    return 0;
+  });
+  
+  loadData();
+  updateSortIndicators();
+  saveToFirestore();
+}
+
+/*****************************
  * FUNCIONES AUXILIARES *
  *****************************/
 function showLoading() {
@@ -443,40 +564,6 @@ function filterTable() {
       tr[i].style.display = txtValue.toUpperCase().indexOf(filter) > -1 ? "" : "none";
     }       
   }
-}
-
-// Función para ordenar por ciudad (GYE primero, luego QUT)
-function sortByCity() {
-  if (database.length === 0) return;
-  
-  // Cambiar el orden de clasificación
-  if (currentSortOrder === 'city-asc') {
-    currentSortOrder = 'city-desc';
-    database.sort((a, b) => {
-      // Primero ordenar por ciudad: QUT antes que GYE
-      if (a.ciudad === 'QUT' && b.ciudad !== 'QUT') return -1;
-      if (a.ciudad !== 'QUT' && b.ciudad === 'QUT') return 1;
-      if (a.ciudad === 'GYE' && b.ciudad !== 'GYE') return 1;
-      if (a.ciudad !== 'GYE' && b.ciudad === 'GYE') return -1;
-      
-      // Si tienen la misma ciudad, mantener el orden original
-      return 0;
-    });
-  } else {
-    currentSortOrder = 'city-asc';
-    database.sort((a, b) => {
-      // Primero ordenar por ciudad: GYE antes que QUT
-      if (a.ciudad === 'GYE' && b.ciudad !== 'GYE') return -1;
-      if (a.ciudad !== 'GYE' && b.ciudad === 'GYE') return 1;
-      if (a.ciudad === 'QUT' && b.ciudad !== 'QUT') return 1;
-      if (a.ciudad !== 'QUT' && b.ciudad === 'QUT') return -1;
-      
-      // Si tienen la misma ciudad, mantener el orden original
-      return 0;
-    });
-  }
-  
-  loadData();
 }
 
 /*****************************

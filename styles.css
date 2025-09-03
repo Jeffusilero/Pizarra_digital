@@ -18,98 +18,139 @@ body {
 h2 {
   color: #333;
   text-align: center;
-  font-size: 1.5em;
+  font-size: 24px;
+}
+
+/* Buscador y contador */
+.search-container {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+.search-input {
+  padding: 10px;
+  width: 300px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.item-counter {
+  font-weight: bold;
+  color: #555;
+}
+
+/* Botones principales */
+.add-section {
+  display: flex;
+  gap: 10px;
   margin-bottom: 20px;
 }
 
+.add-btn, .assign-btn, .import-btn {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.add-btn {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.assign-btn {
+  background-color: #2196F3;
+  color: white;
+}
+
+.import-btn {
+  background-color: #FF9800;
+  color: white;
+}
+
+.add-btn:hover {
+  background-color: #45a049;
+}
+
+.assign-btn:hover {
+  background-color: #0b7dda;
+}
+
+.import-btn:hover {
+  background-color: #e68a00;
+}
+
+/* Tabla */
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 15px;
-  font-size: 0.9em;
+  margin-top: 20px;
 }
 
 th, td {
   border: 1px solid #ddd;
-  padding: 4px;
-  text-align: center;
+  padding: 12px;
+  text-align: left;
 }
 
 th {
-  background-color: #b3b1b1;
-  font-weight: bold;
+  background-color: #f2f2f2;
   cursor: pointer;
+  position: relative;
+  padding-right: 20px;
 }
 
 th:hover {
-  background-color: #9e9c9c;
+  background-color: #e6e6e6;
 }
 
-/* Celda normal */
-td {
-  background-color: transparent;
-  color: black;
-  white-space: nowrap;
-  overflow: visible;
+/* Indicadores de ordenamiento */
+.sort-indicator {
+  font-size: 0.8em;
+  margin-left: 5px;
 }
 
-/* ESTADO INICIAL - RETENER (descripción) */
+/* Estilos para las celdas */
 .retener {
-  background-color: #ff0000 !important; /* Fondo rojo */
-  color: white !important;             /* Texto blanco */
-  font-weight: bold;
+  background-color: #ffcccc;
 }
 
-/* MANIFIESTO GYE */
-.manifest-gye {
-  background-color: #ffff00 !important; /* Fondo amarillo */
-  color: black !important;             /* Texto negro */
-  font-weight: bold;
-}
-
-/* MANIFIESTO QUT */
-.manifest-qut {
-  background-color: #ffa500 !important; /* Fondo naranja */
-  color: black !important;             /* Texto blanco */
-  font-weight: bold;
-}
-
-/* RETENER ASIGNADO A GYE */
 .retener-amarillo {
-  background-color: #ffff00 !important; /* Fondo amarillo */
-  color: black !important;             /* Texto negro */
-  font-weight: bold;
+  background-color: #fff2cc;
+}
+
+.retener-naranja {
+  background-color: #ffe6cc;
+}
+
+.liberar {
+  background-color: #ccffcc;
 }
 
 .ciudad-amarilla {
-  background-color: #ffff00 !important; /* Fondo amarillo */
-  color: black !important;             /* Texto negro */
-  font-weight: bold;
-}
-
-/* RETENER ASIGNADO A QUT */
-.retener-naranja {
-  background-color: #ffa500 !important; /* Fondo naranja */
-  color: white !important;             /* Texto blanco */
-  font-weight: bold;
+  background-color: #fff2cc;
 }
 
 .ciudad-naranja {
-  background-color: #ffa500 !important; /* Fondo naranja */
-  color: white !important;             /* Texto blanco */
-  font-weight: bold;
-}
-
-/* ESTADO LIBERAR */
-.liberar {
-  background-color: #00C851 !important; /* Fondo verde */
-  color: white !important;             /* Texto blanco */
-  font-weight: bold;
+  background-color: #ffe6cc;
 }
 
 .ciudad-liberada {
-  background-color: #00C851 !important; /* Fondo verde */
-  color: white !important;             /* Texto blanco */
+  background-color: #ccffcc;
+}
+
+.manifest-gye {
+  background-color: #fff2cc;
+  font-weight: bold;
+}
+
+.manifest-qut {
+  background-color: #ffe6cc;
   font-weight: bold;
 }
 
@@ -117,107 +158,76 @@ td {
 .action-buttons {
   display: flex;
   gap: 5px;
-  align-items: center;
-  justify-content: center;
 }
 
 .btn-action {
-  padding: 8px 12px;
+  padding: 5px 10px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 0.9em;
+  font-size: 12px;
 }
 
 .btn-blue {
-  background-color: #4285f4;
+  background-color: #2196F3;
   color: white;
 }
 
 .btn-light-blue {
-  background-color: #5bc0de;
-  color: white;
+  background-color: #87CEEB;
+  color: black;
 }
 
 .btn-green {
-  background-color: #00C851;
+  background-color: #4CAF50;
   color: white;
 }
 
 .btn-gray {
-  background-color: #aaaaaa;
-  color: white;
+  background-color: #f1f1f1;
+  color: black;
 }
 
-/* Sección de agregar */
-.add-section {
-  margin-bottom: 15px;
-  padding: 10px;
-  background-color: #f8f9fa;
-  border-radius: 4px;
-  text-align: center;
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
+.action-trigger {
+  position: relative;
 }
 
-.add-btn {
-  background-color: #4285f4;
-  color: white;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-  font-size: 0.9em;
-}
-
-.assign-btn {
-  background-color: #5bc0de;
-  color: white;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-  font-size: 0.9em;
-}
-
-.import-btn {
-  background-color: #34a853;
-  color: white;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-  font-size: 0.9em;
-}
-
-.file-input {
+.action-menu {
   display: none;
+  position: absolute;
+  background-color: white;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+  flex-direction: column;
+  gap: 5px;
+  padding: 5px;
+  border-radius: 4px;
 }
 
-/* Modales */
+.action-menu button {
+  white-space: nowrap;
+  text-align: left;
+}
+
+/* Modal */
 .modal {
   display: none;
   position: fixed;
-  z-index: 1;
+  z-index: 1000;
   left: 0;
   top: 0;
   width: 100%;
   height: 100%;
-  overflow: auto;
-  background-color: rgba(0,0,0,0.4);
+  background-color: rgba(0,0,0,0.5);
 }
 
 .modal-content {
-  background-color: #fefefe;
-  margin: 5% auto;
-  padding: 15px;
-  border: 1px solid #888;
-  width: 60%;
-  max-width: 300px;
-  border-radius: 5px;
-  font-size: 0.9em;
+  background-color: white;
+  margin: 10% auto;
+  padding: 20px;
+  border-radius: 8px;
+  width: 400px;
+  position: relative;
 }
 
 .close {
@@ -235,118 +245,95 @@ td {
 .modal-form {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 15px;
+  margin-top: 20px;
 }
 
 .modal-form input, .modal-form select {
-  padding: 6px;
+  padding: 10px;
   border: 1px solid #ddd;
-  border-radius: 3px;
-  font-size: 0.9em;
+  border-radius: 4px;
+  font-size: 14px;
 }
 
 .modal-btn {
-  background-color: #4285f4;
+  padding: 10px;
+  background-color: #4CAF50;
   color: white;
-  padding: 6px 12px;
   border: none;
-  border-radius: 3px;
+  border-radius: 4px;
   cursor: pointer;
-  margin-top: 8px;
-  font-size: 0.9em;
+  font-size: 14px;
 }
 
-/* Buscador */
-.search-container {
-  width: 100%;
-  margin: 0 auto 15px auto;
-  text-align: center;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 15px;
+.modal-btn:hover {
+  background-color: #45a049;
 }
 
-.search-input {
-  width: 25%;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 0.9em;
-  text-align: center;
-}
-
-.item-counter {
-  font-weight: bold;
-}
-
-/* Menú de acciones */
-.action-menu {
-  display: none;
-  background-color: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 5px;
-  position: absolute;
-  z-index: 10;
-}
-
-.action-menu .action-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.action-trigger {
-  position: relative;
-  display: inline-block;
-}
-
-/* Loading */
-#loading {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-}
-
-.loading-content {
-  background: white;
-  padding: 30px;
-  border-radius: 8px;
-  text-align: center;
-  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
-  min-width: 200px;
-}
-
-.loading-content p {
-  font-size: 1.2em;
-  color: #333;
-  margin-top: 15px;
-}
-
-/* Botón de Google */
+/* Botón de login de Google */
 .google-login-btn {
-  padding: 12px 24px;
+  padding: 15px 25px;
   background-color: #4285F4;
   color: white;
   border: none;
   border-radius: 4px;
   font-size: 16px;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin: 20px auto;
+  transition: background-color 0.3s;
 }
 
 .google-login-btn:hover {
-  background-color: #3367D6;
+  background-color: #357ae8;
+}
+
+/* Estado de carga */
+.loading {
+  display: none;
+  position: fixed;
+  z-index: 2000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255,255,255,0.8);
+  justify-content: center;
+  align-items: center;
+}
+
+.loading-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+/* Input de archivo oculto */
+.file-input {
+  display: none;
+}
+
+/* Responsividad */
+@media (max-width: 768px) {
+  .container {
+    width: 95%;
+  }
+  
+  .search-container {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+  
+  .search-input {
+    width: auto;
+  }
+  
+  .add-section {
+    flex-direction: column;
+  }
+  
+  .modal-content {
+    width: 90%;
+  }
 }
